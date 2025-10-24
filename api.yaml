@@ -1,0 +1,12 @@
+openapi: 3.0.4
+info:
+  title: Neighbourhood Exchange - Composite Service
+  description: |-
+    This is a Composite Service for Neighbourhood Exchange.
+  version: 1.0.0
+tags:
+  - name: composite
+    description: Aggregation of other microservices.
+paths:
+components:
+  schemas:
