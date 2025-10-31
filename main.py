@@ -3,6 +3,10 @@ from __future__ import annotations
 import os
 
 from fastapi import FastAPI, HTTPException, status
+from pydantic import BaseModel
+from typing import List, Optional
+
+from services import user_service, item_service, transaction_service
 
 port = int(os.environ.get("FASTAPIPORT", 8000))
 
@@ -16,6 +20,34 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# -----------------------------------------------------------------------------
+# Pydantic Models for Composite Responses
+# -----------------------------------------------------------------------------
+class PostAuthor(BaseModel):
+    id: str
+    username: str
+
+class EnrichedPost(BaseModel):
+    item_UUID: str
+    title: str
+    description: Optional[str] = None
+    condition: str
+    price: float
+    transaction_type: str
+    image_urls: List[str]
+    author: PostAuthor
+
+class TradeInitiationRequest(BaseModel):
+    item_id: str
+    initiator_user_id: str
+
+class EnrichedTrade(BaseModel):
+    transactionId: int
+    item_title: str
+    status: str
+    initiator: PostAuthor
+    receiver: PostAuthor
+    createdAt: str
 
 # -----------------------------------------------------------------------------
 # Root Endpoint
@@ -29,6 +61,70 @@ def root():
 # Composite Endpoints
 # -----------------------------------------------------------------------------
 
+@app.get("/posts", response_model=List[EnrichedPost])
+async def get_all_posts():
+    """
+    Gets all items and enriches them with author's username.
+    """
+    items = await item_service.list_items()
+    if not items:
+        return []
+
+    user_ids = [item['user_UUID'] for item in items]
+    users_map = await user_service.get_users_by_ids(user_ids)
+
+    enriched_posts = []
+    for item in items:
+        author_data = users_map.get(item['user_UUID'])
+        if author_data:
+            author = PostAuthor(id=author_data['id'], username=author_data['username'])
+            post = EnrichedPost(**item, author=author)
+            enriched_posts.append(post)
+
+    return enriched_posts
+
+@app.post("/trades", status_code=status.HTTP_201_CREATED)
+async def initiate_trade(request: TradeInitiationRequest):
+    """
+    Initiates a trade by creating a new transaction.
+    It first fetches the item to identify the receiver (owner).
+    """
+    # 1. Get item details to find the owner (receiver)
+    item = await item_service.get_item_by_id(request.item_id)
+    receiver_user_id = item.get("user_UUID")
+
+    if not receiver_user_id:
+        raise HTTPException(status_code=404, detail="Item owner not found.")
+
+    if request.initiator_user_id == receiver_user_id:
+        raise HTTPException(status_code=400, detail="Cannot initiate a trade with yourself.")
+
+    # 2. Create the transaction
+    # The transaction service expects an integer for itemId, which is a mismatch with item service UUID.
+    # This is an issue in the microservice design. For this example, we'll assume
+    # the front-end has a mapping or we can't fulfill this request.
+    # Let's raise a specific error to highlight this incompatibility.
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Cannot create trade: Item service uses UUIDs for items, but Transaction service requires integer IDs. This is an architectural incompatibility."
+    )
+
+@app.get("/users/{user_id}/trades", response_model=List[EnrichedTrade])
+async def get_user_trades(user_id: str):
+    """
+    Gets a user's transaction history, enriched with item and user details.
+    """
+    transactions = await transaction_service.list_transactions_for_user(user_id)
+    if not transactions:
+        return []
+
+    # Again, we face the item ID type mismatch. We cannot proceed to fetch item details.
+    # If the IDs were compatible (e.g., both UUIDs), the logic would be as follows.
+    # For now, we return an error.
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Cannot fetch trades: Item service uses UUIDs for items, but Transaction service uses integer IDs. This is an architectural incompatibility."
+    )
 
 # -----------------------------------------------------------------------------
 # Entrypoint for `python main.py`
