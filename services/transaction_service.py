@@ -19,7 +19,7 @@ async def create_transaction(trade_data: NewTrade) -> dict:
         try:
             response = await client.post(
                 f"{TRANSACTION_SERVICE_URL}/transactions/transaction",
-                json=trade_data.dict(),
+                json=trade_data.model_dump(),
             )
             response.raise_for_status()
             return response.json()
