@@ -1,1 +1,483 @@
-{"openapi":"3.1.0","info":{"title":"Transaction API","description":"Am API to manage transactions.","version":"1.0.0"},"paths":{"/":{"get":{"summary":"Root","operationId":"root__get","responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{}}}}}}},"/transactions/transaction":{"post":{"summary":"Create Transaction","operationId":"create_transaction_transactions_transaction_post","requestBody":{"content":{"application/json":{"schema":{"$ref":"#/components/schemas/NewTransactionRequest"}}},"required":true},"responses":{"201":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Transaction"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/transactions/{transactionId}":{"get":{"summary":"Get Transaction","operationId":"get_transaction_transactions__transactionId__get","parameters":[{"name":"transactionId","in":"path","required":true,"schema":{"type":"integer","title":"Transactionid"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Transaction"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}},"put":{"summary":"Update Transaction","operationId":"update_transaction_transactions__transactionId__put","parameters":[{"name":"transactionId","in":"path","required":true,"schema":{"type":"integer","title":"Transactionid"}}],"requestBody":{"required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/UpdateStatusRequest"}}}},"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Transaction"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}},"delete":{"summary":"Delete Transaction","operationId":"delete_transaction_transactions__transactionId__delete","parameters":[{"name":"transactionId","in":"path","required":true,"schema":{"type":"integer","title":"Transactionid"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Transaction"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}},"/transactions":{"get":{"summary":"List Transactions","operationId":"list_transactions_transactions_get","parameters":[{"name":"status_param","in":"query","required":false,"schema":{"anyOf":[{"enum":["pending","completed","canceled"],"type":"string"},{"type":"null"}],"title":"Status Param"}},{"name":"initiatorUserId","in":"query","required":false,"schema":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Initiatoruserid"}},{"name":"receiverUserId","in":"query","required":false,"schema":{"anyOf":[{"type":"string"},{"type":"null"}],"title":"Receiveruserid"}},{"name":"itemId","in":"query","required":false,"schema":{"anyOf":[{"type":"integer"},{"type":"null"}],"title":"Itemid"}},{"name":"limit","in":"query","required":false,"schema":{"type":"integer","default":50,"title":"Limit"}},{"name":"offset","in":"query","required":false,"schema":{"type":"integer","default":0,"title":"Offset"}}],"responses":{"200":{"description":"Successful Response","content":{"application/json":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/Transaction"},"title":"Response List Transactions Transactions Get"}}}},"422":{"description":"Validation Error","content":{"application/json":{"schema":{"$ref":"#/components/schemas/HTTPValidationError"}}}}}}}},"components":{"schemas":{"HTTPValidationError":{"properties":{"detail":{"items":{"$ref":"#/components/schemas/ValidationError"},"type":"array","title":"Detail"}},"type":"object","title":"HTTPValidationError"},"NewTransactionRequest":{"properties":{"itemId":{"type":"integer","title":"Itemid","description":"The ID of the item being requested by the initiator.","example":8},"initiatorUserId":{"type":"string","title":"Initiatoruserid","description":"The ID of the user who started the transaction.","example":"4"},"receiverUserId":{"type":"string","title":"Receiveruserid","description":"The ID of the user who owns the requested item.","example":"6"},"status":{"type":"string","enum":["pending","completed","canceled"],"title":"Status","description":"The current status of the transaction.","default":"pending","example":"pending"}},"type":"object","required":["itemId","initiatorUserId","receiverUserId"],"title":"NewTransactionRequest"},"Transaction":{"properties":{"transactionId":{"type":"integer","title":"Transactionid","description":"The unique identifier for the transaction.","example":5},"itemId":{"type":"integer","title":"Itemid","description":"The ID of the item being requested by the initiator.","example":8},"initiatorUserId":{"type":"string","title":"Initiatoruserid","description":"The ID of the user who started the transaction.","example":"4"},"receiverUserId":{"type":"string","title":"Receiveruserid","description":"The ID of the user who owns the requested item.","example":"6"},"status":{"type":"string","enum":["pending","completed","canceled"],"title":"Status","description":"The current status of the transaction.","example":"pending"},"createdAt":{"type":"string","format":"date-time","title":"Createdat","description":"The timestamp when the transaction was created.","example":"2023-01-01T00:00:00"},"updatedAt":{"type":"string","format":"date-time","title":"Updatedat","description":"The timestamp when the transaction was last updated.","example":"2023-01-01T00:00:00"}},"type":"object","required":["transactionId","itemId","initiatorUserId","receiverUserId","status","createdAt","updatedAt"],"title":"Transaction"},"UpdateStatusRequest":{"properties":{"status":{"type":"string","enum":["completed","canceled"],"title":"Status","description":"New status"}},"type":"object","required":["status"],"title":"UpdateStatusRequest"},"ValidationError":{"properties":{"loc":{"items":{"anyOf":[{"type":"string"},{"type":"integer"}]},"type":"array","title":"Location"},"msg":{"type":"string","title":"Message"},"type":{"type":"string","title":"Error Type"}},"type":"object","required":["loc","msg","type"],"title":"ValidationError"}}}}
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Transaction API",
+    "description": "Am API to manage transactions.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions/transaction": {
+      "post": {
+        "summary": "Create Transaction",
+        "operationId": "create_transaction_transactions_transaction_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewTransactionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions/{transactionId}": {
+      "get": {
+        "summary": "Get Transaction",
+        "operationId": "get_transaction_transactions__transactionId__get",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Transactionid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "Update Transaction",
+        "operationId": "update_transaction_transactions__transactionId__put",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Transactionid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateStatusRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Transaction",
+        "operationId": "delete_transaction_transactions__transactionId__delete",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Transactionid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions": {
+      "get": {
+        "summary": "List Transactions",
+        "operationId": "list_transactions_transactions_get",
+        "parameters": [
+          {
+            "name": "status_param",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "pending",
+                    "completed",
+                    "canceled"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status Param"
+            }
+          },
+          {
+            "name": "initiatorUserId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Initiatoruserid"
+            }
+          },
+          {
+            "name": "receiverUserId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Receiveruserid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Itemid"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "title": "Offset"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Transaction"
+                  },
+                  "title": "Response List Transactions Transactions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "NewTransactionRequest": {
+        "properties": {
+          "itemId": {
+            "type": "integer",
+            "title": "Itemid",
+            "description": "The ID of the item being requested by the initiator.",
+            "example": 8
+          },
+          "initiatorUserId": {
+            "type": "string",
+            "title": "Initiatoruserid",
+            "description": "The ID of the user who started the transaction.",
+            "example": "4"
+          },
+          "receiverUserId": {
+            "type": "string",
+            "title": "Receiveruserid",
+            "description": "The ID of the user who owns the requested item.",
+            "example": "6"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "completed",
+              "canceled"
+            ],
+            "title": "Status",
+            "description": "The current status of the transaction.",
+            "default": "pending",
+            "example": "pending"
+          }
+        },
+        "type": "object",
+        "required": [
+          "itemId",
+          "initiatorUserId",
+          "receiverUserId"
+        ],
+        "title": "NewTransactionRequest"
+      },
+      "Transaction": {
+        "properties": {
+          "transactionId": {
+            "type": "integer",
+            "title": "Transactionid",
+            "description": "The unique identifier for the transaction.",
+            "example": 5
+          },
+          "itemId": {
+            "type": "integer",
+            "title": "Itemid",
+            "description": "The ID of the item being requested by the initiator.",
+            "example": 8
+          },
+          "initiatorUserId": {
+            "type": "string",
+            "title": "Initiatoruserid",
+            "description": "The ID of the user who started the transaction.",
+            "example": "4"
+          },
+          "receiverUserId": {
+            "type": "string",
+            "title": "Receiveruserid",
+            "description": "The ID of the user who owns the requested item.",
+            "example": "6"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "completed",
+              "canceled"
+            ],
+            "title": "Status",
+            "description": "The current status of the transaction.",
+            "example": "pending"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Createdat",
+            "description": "The timestamp when the transaction was created.",
+            "example": "2023-01-01T00:00:00"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updatedat",
+            "description": "The timestamp when the transaction was last updated.",
+            "example": "2023-01-01T00:00:00"
+          }
+        },
+        "type": "object",
+        "required": [
+          "transactionId",
+          "itemId",
+          "initiatorUserId",
+          "receiverUserId",
+          "status",
+          "createdAt",
+          "updatedAt"
+        ],
+        "title": "Transaction"
+      },
+      "UpdateStatusRequest": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "canceled"
+            ],
+            "title": "Status",
+            "description": "New status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "UpdateStatusRequest"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
