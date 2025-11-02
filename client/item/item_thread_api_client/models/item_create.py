@@ -1,0 +1,212 @@
+from __future__ import annotations
+
+from collections.abc import Mapping
+from typing import Any, TypeVar, cast
+from uuid import UUID
+
+from attrs import define as _attrs_define
+from attrs import field as _attrs_field
+
+from ..models.category_type import CategoryType
+from ..models.condition_type import ConditionType
+from ..models.transaction_type import TransactionType
+from ..types import UNSET, Unset
+
+T = TypeVar("T", bound="ItemCreate")
+
+
+@_attrs_define
+class ItemCreate:
+    """Creation payload for an item and its post.
+
+    Attributes:
+        title (str): Title of the post of the item
+        condition (ConditionType):
+        transaction_type (TransactionType):
+        price (float): Price of the item must be greater than 0.
+        description (None | str | Unset): Description of the item in the post.
+        category (list[CategoryType] | None | Unset): Category of the posted item.
+        location (None | str | Unset): The position for transaction, can be online or a physical place.
+        image_urls (list[str] | Unset): The list of URL images of the post
+        user_uuid (None | Unset | UUID):
+    """
+
+    title: str
+    condition: ConditionType
+    transaction_type: TransactionType
+    price: float
+    description: None | str | Unset = UNSET
+    category: list[CategoryType] | None | Unset = UNSET
+    location: None | str | Unset = UNSET
+    image_urls: list[str] | Unset = UNSET
+    user_uuid: None | Unset | UUID = UNSET
+    additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        title = self.title
+
+        condition = self.condition.value
+
+        transaction_type = self.transaction_type.value
+
+        price = self.price
+
+        description: None | str | Unset
+        if isinstance(self.description, Unset):
+            description = UNSET
+        else:
+            description = self.description
+
+        category: list[str] | None | Unset
+        if isinstance(self.category, Unset):
+            category = UNSET
+        elif isinstance(self.category, list):
+            category = []
+            for category_type_0_item_data in self.category:
+                category_type_0_item = category_type_0_item_data.value
+                category.append(category_type_0_item)
+
+        else:
+            category = self.category
+
+        location: None | str | Unset
+        if isinstance(self.location, Unset):
+            location = UNSET
+        else:
+            location = self.location
+
+        image_urls: list[str] | Unset = UNSET
+        if not isinstance(self.image_urls, Unset):
+            image_urls = self.image_urls
+
+        user_uuid: None | str | Unset
+        if isinstance(self.user_uuid, Unset):
+            user_uuid = UNSET
+        elif isinstance(self.user_uuid, UUID):
+            user_uuid = str(self.user_uuid)
+        else:
+            user_uuid = self.user_uuid
+
+        field_dict: dict[str, Any] = {}
+        field_dict.update(self.additional_properties)
+        field_dict.update(
+            {
+                "title": title,
+                "condition": condition,
+                "transaction_type": transaction_type,
+                "price": price,
+            }
+        )
+        if description is not UNSET:
+            field_dict["description"] = description
+        if category is not UNSET:
+            field_dict["category"] = category
+        if location is not UNSET:
+            field_dict["location"] = location
+        if image_urls is not UNSET:
+            field_dict["image_urls"] = image_urls
+        if user_uuid is not UNSET:
+            field_dict["user_UUID"] = user_uuid
+
+        return field_dict
+
+    @classmethod
+    def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        d = dict(src_dict)
+        title = d.pop("title")
+
+        condition = ConditionType(d.pop("condition"))
+
+        transaction_type = TransactionType(d.pop("transaction_type"))
+
+        price = d.pop("price")
+
+        def _parse_description(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        description = _parse_description(d.pop("description", UNSET))
+
+        def _parse_category(data: object) -> list[CategoryType] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                category_type_0 = []
+                _category_type_0 = data
+                for category_type_0_item_data in _category_type_0:
+                    category_type_0_item = CategoryType(category_type_0_item_data)
+
+                    category_type_0.append(category_type_0_item)
+
+                return category_type_0
+            except:  # noqa: E722
+                pass
+            return cast(list[CategoryType] | None | Unset, data)
+
+        category = _parse_category(d.pop("category", UNSET))
+
+        def _parse_location(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        location = _parse_location(d.pop("location", UNSET))
+
+        image_urls = cast(list[str], d.pop("image_urls", UNSET))
+
+        def _parse_user_uuid(data: object) -> None | Unset | UUID:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                user_uuid_type_0 = UUID(data)
+
+                return user_uuid_type_0
+            except:  # noqa: E722
+                pass
+            return cast(None | Unset | UUID, data)
+
+        user_uuid = _parse_user_uuid(d.pop("user_UUID", UNSET))
+
+        item_create = cls(
+            title=title,
+            condition=condition,
+            transaction_type=transaction_type,
+            price=price,
+            description=description,
+            category=category,
+            location=location,
+            image_urls=image_urls,
+            user_uuid=user_uuid,
+        )
+
+        item_create.additional_properties = d
+        return item_create
+
+    @property
+    def additional_keys(self) -> list[str]:
+        return list(self.additional_properties.keys())
+
+    def __getitem__(self, key: str) -> Any:
+        return self.additional_properties[key]
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        self.additional_properties[key] = value
+
+    def __delitem__(self, key: str) -> None:
+        del self.additional_properties[key]
+
+    def __contains__(self, key: str) -> bool:
+        return key in self.additional_properties

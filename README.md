@@ -1,5 +1,13 @@
 # Composite-Microservice
 
+## OpenAPI Python Client
+
+```bash
+openapi-python-client generate --path ./client/openapi-item.json --output-path ./client/item
+openapi-python-client generate --path ./client/openapi-transaction.json --output-path ./client/transaction
+openapi-python-client generate --path ./client/openapi-user.json --output-path ./client/user
+```
+
 ## Project Description
 
 Our project is a community-driven web-based app that allows neighbors to trade, lend, or give away items in a simple and trustworthy way. Users can create profiles, list items they no longer need, and browse other postings for things they might be interested in. These items can range from plants to electronics. The goal is to promote sustainability and strengthen community ties by reducing waste and encouraging sharing instead of buying new items. It can be particularly helpful among college students. 
