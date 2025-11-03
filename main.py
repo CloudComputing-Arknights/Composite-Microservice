@@ -4,7 +4,15 @@ import os
 from typing import Optional, List
 from uuid import UUID
 
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, HTTPException, Request, status, JSONResponse
+
+import concurrent.futures
+from client.user.user_address_api_client.api.default.get_user_users_user_id_get import (
+    sync as get_user_by_id,
+)
+from client.transaction.transaction_api_client.api.default.list_transactions_transactions_get import (
+    sync as list_transactions,
+)
 
 # Composite models (Pydantic) used by this API layer
 from models.composite import (
