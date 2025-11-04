@@ -14,6 +14,34 @@ from client.item.item_thread_api_client.models.transaction_type import Transacti
 # -----------------------------------------------------------------------------
 # Pydantic Models for Composite Requests/Responses
 # -----------------------------------------------------------------------------
+class PostAuthor(BaseModel):
+    """A simplified User model for embedding in EnrichedPost."""
+    id: UUID
+    username: str
+
+
+class EnrichedPost(BaseModel):
+    """
+    An "enriched" post model that combines Item and Author info.
+    Used by the GET /items endpoint.
+    """
+    # --- Fields from Item ---
+    item_UUID: UUID
+    user_UUID: UUID
+    title: str
+    description: Optional[str] = None
+    condition: str  # Use ConditionType enum from client for robustness
+    transaction_type: str # Use TransactionType enum from client
+    price: float
+    created_at: str # Use datetime in Pydantic v2
+    updated_at: str # Use datetime in Pydantic v2
+    category: Optional[List[str]] = None # Use CategoryType enum from client
+    location: Optional[str] = None
+    image_urls: List[str]
+    
+    # --- Enriched Field ---
+    author: PostAuthor
+
 
 class LoginRequest(BaseModel):
     """Placeholder login payload. Actual authentication is not implemented yet.

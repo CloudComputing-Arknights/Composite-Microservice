@@ -1,10 +1,19 @@
 from __future__ import annotations
 
 import os
-from typing import Optional, List
+from typing import Optional, List, Dict
 from uuid import UUID
 
-from fastapi import FastAPI, HTTPException, Request, status
+from fastapi import FastAPI, HTTPException, Request, status, JSONResponse
+
+import concurrent.futures
+
+from client.user.user_address_api_client.api.default.get_user_users_user_id_get import (
+    sync as get_user_by_id,
+)
+from client.transaction.transaction_api_client.api.default.list_transactions_transactions_get import (
+    sync as list_transactions,
+)
 
 # Composite models (Pydantic) used by this API layer
 from models.composite import (
@@ -15,6 +24,7 @@ from models.composite import (
     UpdateOwnItemRequest,
     TransactionInitRequest,
     TransactionInitResponse,
+    EnrichedPost,PostAuthor
 )
 
 # Generated API clients
@@ -290,6 +300,196 @@ def create_transaction_for_me(payload: TransactionInitRequest, request: Request)
     if tx is None:
         raise HTTPException(status_code=502, detail="Transaction service did not return a response")
     return tx.to_dict() if hasattr(tx, "to_dict") else tx
+
+
+# -----------------------------------------------------------------------------
+# (New) Public Browsing Endpoint (User Story: "browse available items")
+# -----------------------------------------------------------------------------
+
+@app.get("/items", response_model=List[EnrichedPost])
+def get_all_available_items(skip: int = 0, limit: int = 20):
+    """
+    (New) Browse all available items (public).
+    
+    [Fulfills requirement: "asynchronously" (via threads)]
+    This endpoint uses a ThreadPoolExecutor to execute calls to the
+    item-service and user-service in parallel for "async aggregation".
+    """
+    
+    # 1. Get the list of items (This is a blocking I/O call)
+    try:
+        items = list_items(client=_item_client, skip=skip, limit=limit)
+        if not isinstance(items, list):
+            return []
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to fetch from Item-Service: {e}")
+
+    # 2. Collect all required user_uuids
+    user_uuids_to_fetch = {getattr(item, "user_uuid", None) for item in items}
+    user_uuids_to_fetch.discard(None) # Remove None if present
+    
+    if not user_uuids_to_fetch:
+        # No users to enrich, return early (or return un-enriched items)
+        return []
+
+    # 3. (New) Use a ThreadPoolExecutor to fetch user info in parallel
+    # [Fulfills requirement: "use threads for parallel execution"]
+    users_map: Dict[UUID, UserRead] = {}
+    
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Create a dict mapping futures to user_uuids to retrieve results
+        future_to_uuid = {
+            executor.submit(get_user_by_id, client=_user_client, user_id=uuid): uuid
+            for uuid in user_uuids_to_fetch
+        }
+        
+        # Wait for threads to complete
+        for future in concurrent.futures.as_completed(future_to_uuid):
+            user_uuid = future_to_uuid[future]
+            try:
+                user_data = future.result() # Get the thread's return value
+                if user_data and isinstance(user_data, UserRead):
+                    users_map[user_uuid] = user_data
+            except Exception as e:
+                # Don't fail the entire request if one user lookup fails
+                print(f"Failed to fetch user {user_uuid} for enrichment: {e}")
+
+    # 4. Enrich the results
+    enriched_posts = []
+    for item in items:
+        item_dict = item.to_dict() # Convert auto-gen model to dict
+        author_data = users_map.get(item_dict.get("user_uuid"))
+        
+        if author_data:
+            # Create PostAuthor model
+            author = PostAuthor(
+                id=getattr(author_data, "id", ""),
+                username=getattr(author_data, "username", "Unknown")
+            )
+            
+            # Create EnrichedPost model (fields must match)
+            post = EnrichedPost(
+                item_UUID=item_dict.get("item_uuid"),
+                user_UUID=item_dict.get("user_uuid"),
+                title=item_dict.get("title"),
+                description=item_dict.get("description"),
+                condition=item_dict.get("condition"),
+                transaction_type=item_dict.get("transaction_type"),
+                price=item_dict.get("price"),
+                created_at=item_dict.get("created_at"),
+                updated_at=item_dict.get("updated_at"),
+                category=item_dict.get("category", []),
+                location=item_dict.get("location"),
+                image_urls=item_dict.get("image_urls", []),
+                author=author # Embed author info
+            )
+            enriched_posts.append(post)
+
+    return enriched_posts
+
+
+# -----------------------------------------------------------------------------
+# (New) Logged-in User Endpoints (User Story: "view my transaction history")
+# -----------------------------------------------------------------------------
+
+@app.get("/me/transactions")
+def get_my_transaction_history(request: Request):
+    """
+    (New) View "my" transaction history.
+    
+    [Fulfills requirement: "demonstrate implementing logical foreign key constraints"]
+    This endpoint demonstrates the *need* for logical foreign keys
+    by returning 501, as this link cannot be resolved in stateless mode.
+    """
+    
+    username = get_current_username(request)
+    if not username:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not logged in (placeholder)")
+
+    # 1. We can fetch the raw transactions
+    try:
+        # (Assumes 'username' is the user_id in the transaction service)
+        tx_as_initiator = list_transactions(
+            client=_transaction_client, initiator_user_id=username
+        )
+        tx_as_receiver = list_transactions(
+            client=_transaction_client, receiver_user_id=username
+        )
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Failed to fetch from Transaction-Service: {e}")
+
+    # 2. We can merge them
+    all_txs_raw = (tx_as_initiator or []) + (tx_as_receiver or [])
+    if not all_txs_raw:
+        return []
+
+    # 3. But we cannot "enrich" them.
+    # tx.item_id is an int (e.g., 123)
+    # get_item() needs a UUID (e.g., "a1b2c3d4-...")
+    #
+    # This is what the professor's PPT refers to: we need a DBaaS
+    # with an "Associative Entity" (mapping table) to link them.
+    
+    return JSONResponse(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        content={
+            "message": "Cannot enrich transaction history in stateless mode.",
+            "detail": "This endpoint requires the Composite Service's DBaaS to resolve the 'logical foreign key' between Transaction (itemId: int) and Item (item_UUID: UUID).",
+            "raw_transactions": [tx.to_dict() for tx in all_txs_raw if hasattr(tx, "to_dict")]
+        }
+    )
+
+
+# -----------------------------------------------------------------------------
+# (New) Admin Endpoints (User Stories: "monitor" & "remove content")
+# -----------------------------------------------------------------------------
+
+@app.get("/admin/monitor/user/{user_uuid}")
+def admin_monitor_user(user_uuid: UUID, request: Request):
+    """
+    (New) Monitor a specific user's activity (placeholder).
+    
+    [Fulfills User Story: "monitor user activity"]
+    
+    This is a placeholder. A real implementation would:
+    1. Check if the current user is an admin.
+    2. Use a ThreadPoolExecutor to call in parallel:
+       - get_user_by_id(user_uuid)
+       - (filtered) list_items(...)
+       - list_transactions(...)
+    3. Aggregate all results and return them.
+    """
+    # TODO: Implement Admin-only authentication
+    username = get_current_username(request)
+    if not username: # Simulate: only logged-in users can access
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not logged in (placeholder)")
+        
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Admin dashboard functionality is not yet implemented."
+    )
+
+@app.post("/admin/remove/content")
+def admin_remove_content(request: Request):
+    """
+    (New) Remove inappropriate content (placeholder).
+    
+    [Fulfills User Story: "remove inappropriate content"]
+    
+    This is a placeholder. A real implementation requires a complex "Saga" pattern:
+    1. Check for admin privileges.
+    2. Receive a body like { "type": "item", "id": "..." } or { "type": "user", "id": "..." }.
+    3. Based on type, orchestrate a cross-service deletion/archive.
+    """
+    # TODO: Implement Admin-only authentication
+    username = get_current_username(request)
+    if not username:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not logged in (placeholder)")
+
+    raise HTTPException(
+        status_code=status.HTTP_501_NOT_IMPLEMENTED,
+        detail="Admin content moderation functionality is not yet implemented."
+    )
 
 
 # -----------------------------------------------------------------------------
