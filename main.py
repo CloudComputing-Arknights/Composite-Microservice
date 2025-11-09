@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from contextlib import asynccontextmanager
 from uuid import UUID
 
 from dotenv import load_dotenv
@@ -11,20 +12,39 @@ from client.transaction.transaction_api_client.client import Client as Transacti
 from client.user.user_address_api_client.client import Client as UserClient
 from models.dto.item_user_dto import CreateOwnItemReq, UpdateOwnItemReq
 from models.dto.user_dto import SignedInUserRes, SignInReq, SignInRes
-from utils.db_connection import SessionDep
+from utils.db_connection import SessionDep, create_db_and_tables, close_db_connection
 
+# Table Models
+from models.po.item_user_po import ItemUser
 
 # -----------------------------------------------------------------------------
 # Environments and Clients
 # -----------------------------------------------------------------------------
 load_dotenv()
 
+port = int(os.environ.get("FASTAPIPORT", 8000))
+
 _user_client = UserClient(base_url=os.environ.get("USER_SERVICE_URL"))
 _item_client = ItemClient(base_url=os.environ.get("ITEM_SERVICE_URL"))
 _transaction_client = TransactionClient(base_url=os.environ.get("TRANSACTION_SERVICE_URL"))
 
 
-port = int(os.environ.get("FASTAPIPORT", 8000))
+# -----------------------------------------------------------------------------
+# Lifespan: Database Initialization
+# -----------------------------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Create tables
+    print("Creating database tables...")
+    await create_db_and_tables()
+    print("Database tables created successfully!")
+
+    yield
+
+    # Shutdown: cleanup
+    print("Closing database connection...")
+    await close_db_connection()
+    print("Shutdown complete!")
 
 
 # -----------------------------------------------------------------------------
@@ -34,6 +54,7 @@ app = FastAPI(
     title="Composite API",
     description="An API to orchestrate calls to other microservices.",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 
@@ -51,7 +72,6 @@ async def root():
 
 async def get_user_by_token(request: Request):
     pass
-
 
 
 # -----------------------------------------------------------------------------
