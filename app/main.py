@@ -6,33 +6,27 @@ from uuid import UUID
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
-
-from client.item.item_thread_api_client.client import Client as ItemClient
-from client.transaction.transaction_api_client.client import Client as TransactionClient
-from client.user.user_address_api_client.client import Client as UserClient
-from client.user.user_address_api_client.api.default.login_auth_token_post import asyncio as user_login_async
-from client.user.user_address_api_client.models.body_login_auth_token_post import BodyLoginAuthTokenPost
-from client.user.user_address_api_client.models.token import Token
-from client.user.user_address_api_client.models.http_validation_error import HTTPValidationError
-from client.user.user_address_api_client.types import UNSET
 from fastapi import HTTPException
-from models.dto.item_user_dto import CreateOwnItemReq, UpdateOwnItemReq
-from models.dto.user_dto import SignedInUserRes, SignInReq, SignInRes
-from utils.auth import get_user_id_from_token
-from utils.db_connection import SessionDep, create_db_and_tables, close_db_connection
+
+from app.client.item.item_thread_api_client.client import Client as ItemClient
+from app.client.transaction.transaction_api_client.client import Client as TransactionClient
+from app.client.user.user_address_api_client.api.default.login_auth_token_post import asyncio as user_login_async
+from app.client.user.user_address_api_client.client import Client as UserClient
+from app.client.user.user_address_api_client.models.body_login_auth_token_post import BodyLoginAuthTokenPost
+from app.client.user.user_address_api_client.models.http_validation_error import HTTPValidationError
+from app.client.user.user_address_api_client.models.token import Token
+from app.client.user.user_address_api_client.types import UNSET
+from app.models.dto.item_user_dto import CreateOwnItemReq, UpdateOwnItemReq
+from app.models.dto.user_dto import SignedInUserRes, SignInReq, SignInRes
+from app.utils.auth import get_user_id_from_token
+from app.utils.db_connection import SessionDep, create_db_and_tables, close_db_connection
 
 # Table Models
-from models.po.item_user_po import ItemUser
-from models.po.transaction_user_po import TransactionUser
-from models.po.address_user_po import AddressUser
-from models.po.item_address_po import ItemAddress
 
 # -----------------------------------------------------------------------------
 # Environments and Clients
 # -----------------------------------------------------------------------------
 load_dotenv()
-
-port = int(os.environ.get("FASTAPIPORT", 8000))
 
 _user_client = UserClient(base_url=os.environ.get("USER_SERVICE_URL"))
 _item_client = ItemClient(base_url=os.environ.get("ITEM_SERVICE_URL"))
@@ -141,12 +135,3 @@ async def delete_my_item(item_id: UUID, request: Request, session: SessionDep):
     user_id = get_user_id_from_token(authorization_header)
     token = authorization_header.replace("Bearer ", "")
     pass
-
-
-# -----------------------------------------------------------------------------
-# Entrypoint for `python main.py`
-# -----------------------------------------------------------------------------
-if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)

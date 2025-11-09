@@ -3,7 +3,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import List
 
-from models.po.item_address_po import ItemAddress
+from app.models.po.item_address_po import ItemAddress
 
 
 async def create_item_address_relation(
