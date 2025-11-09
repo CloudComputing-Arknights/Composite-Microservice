@@ -12,6 +12,7 @@ from client.transaction.transaction_api_client.client import Client as Transacti
 from client.user.user_address_api_client.client import Client as UserClient
 from models.dto.item_user_dto import CreateOwnItemReq, UpdateOwnItemReq
 from models.dto.user_dto import SignedInUserRes, SignInReq, SignInRes
+from utils.auth import get_user_id_from_token
 from utils.db_connection import SessionDep, create_db_and_tables, close_db_connection
 
 # Table Models
@@ -69,13 +70,19 @@ async def root():
 # -----------------------------------------------------------------------------
 # Auth Endpoints
 # -----------------------------------------------------------------------------
-@app.post("/auth/login", response_model=SignInRes)
+@app.post("/token", response_model=SignInRes)
 async def sign_in(payload: SignInReq):
     pass
 
 
-@app.get("/auth/me", response_model=SignedInUserRes)
+# -----------------------------------------------------------------------------
+# User Endpoints
+# -----------------------------------------------------------------------------
+@app.get("/me/user", response_model=SignedInUserRes)
 async def auth_me(request: Request):
+    authorization_header = request.headers.get("Authorization")
+    user_id = get_user_id_from_token(authorization_header)
+    token = authorization_header.replace("Bearer ", "")
     pass
 
 
@@ -84,21 +91,33 @@ async def auth_me(request: Request):
 # -----------------------------------------------------------------------------
 @app.post("/me/items")
 async def create_item_for_me(payload: CreateOwnItemReq, request: Request, session: SessionDep):
+    authorization_header = request.headers.get("Authorization")
+    user_id = get_user_id_from_token(authorization_header)
+    token = authorization_header.replace("Bearer ", "")
     pass
 
 
 @app.get("/me/items")
 async def list_my_items(request: Request, session: SessionDep, skip: int = 0, limit: int = 10):
+    authorization_header = request.headers.get("Authorization")
+    user_id = get_user_id_from_token(authorization_header)
+    token = authorization_header.replace("Bearer ", "")
     pass
 
 
 @app.patch("/me/items/{item_id}")
 async def update_my_item(item_id: UUID, payload: UpdateOwnItemReq, request: Request, session: SessionDep):
+    authorization_header = request.headers.get("Authorization")
+    user_id = get_user_id_from_token(authorization_header)
+    token = authorization_header.replace("Bearer ", "")
     pass
 
 
 @app.delete("/me/items/{item_id}")
 async def delete_my_item(item_id: UUID, request: Request, session: SessionDep):
+    authorization_header = request.headers.get("Authorization")
+    user_id = get_user_id_from_token(authorization_header)
+    token = authorization_header.replace("Bearer ", "")
     pass
 
 
