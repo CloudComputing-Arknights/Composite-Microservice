@@ -5,26 +5,26 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...models.body_login_auth_token_post import BodyLoginAuthTokenPost
 from ...models.http_validation_error import HTTPValidationError
-from ...models.item_create import ItemCreate
-from ...models.job_read import JobRead
+from ...models.token import Token
 from ...types import Response
 
 
 def _get_kwargs(
     *,
-    body: ItemCreate,
+    body: BodyLoginAuthTokenPost,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
 
     _kwargs: dict[str, Any] = {
         "method": "post",
-        "url": "/items/",
+        "url": "/auth/token",
     }
 
-    _kwargs["json"] = body.to_dict()
+    _kwargs["data"] = body.to_dict()
 
-    headers["Content-Type"] = "application/json"
+    headers["Content-Type"] = "application/x-www-form-urlencoded"
 
     _kwargs["headers"] = headers
     return _kwargs
@@ -32,11 +32,11 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | JobRead | None:
-    if response.status_code == 202:
-        response_202 = JobRead.from_dict(response.json())
+) -> HTTPValidationError | Token | None:
+    if response.status_code == 200:
+        response_200 = Token.from_dict(response.json())
 
-        return response_202
+        return response_200
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
@@ -51,7 +51,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | JobRead]:
+) -> Response[HTTPValidationError | Token]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -63,21 +63,22 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: ItemCreate,
-) -> Response[HTTPValidationError | JobRead]:
-    """Create Item
+    body: BodyLoginAuthTokenPost,
+) -> Response[HTTPValidationError | Token]:
+    """Login
 
-     Accept the request of creating a new item, return 202 and start a job to create it asynchronously.
+     Accepts form fields: username, password.
+    Returns: {access_token, token_type}
 
     Args:
-        body (ItemCreate): Creation payload for an item and its post.
+        body (BodyLoginAuthTokenPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | JobRead]
+        Response[HTTPValidationError | Token]
     """
 
     kwargs = _get_kwargs(
@@ -94,21 +95,22 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
-    body: ItemCreate,
-) -> HTTPValidationError | JobRead | None:
-    """Create Item
+    body: BodyLoginAuthTokenPost,
+) -> HTTPValidationError | Token | None:
+    """Login
 
-     Accept the request of creating a new item, return 202 and start a job to create it asynchronously.
+     Accepts form fields: username, password.
+    Returns: {access_token, token_type}
 
     Args:
-        body (ItemCreate): Creation payload for an item and its post.
+        body (BodyLoginAuthTokenPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | JobRead
+        HTTPValidationError | Token
     """
 
     return sync_detailed(
@@ -120,21 +122,22 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
-    body: ItemCreate,
-) -> Response[HTTPValidationError | JobRead]:
-    """Create Item
+    body: BodyLoginAuthTokenPost,
+) -> Response[HTTPValidationError | Token]:
+    """Login
 
-     Accept the request of creating a new item, return 202 and start a job to create it asynchronously.
+     Accepts form fields: username, password.
+    Returns: {access_token, token_type}
 
     Args:
-        body (ItemCreate): Creation payload for an item and its post.
+        body (BodyLoginAuthTokenPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | JobRead]
+        Response[HTTPValidationError | Token]
     """
 
     kwargs = _get_kwargs(
@@ -149,21 +152,22 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
-    body: ItemCreate,
-) -> HTTPValidationError | JobRead | None:
-    """Create Item
+    body: BodyLoginAuthTokenPost,
+) -> HTTPValidationError | Token | None:
+    """Login
 
-     Accept the request of creating a new item, return 202 and start a job to create it asynchronously.
+     Accepts form fields: username, password.
+    Returns: {access_token, token_type}
 
     Args:
-        body (ItemCreate): Creation payload for an item and its post.
+        body (BodyLoginAuthTokenPost):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | JobRead
+        HTTPValidationError | Token
     """
 
     return (

@@ -12,7 +12,7 @@
           "Items"
         ],
         "summary": "Create Item",
-        "description": "Create a new item record.",
+        "description": "Accept the request of creating a new item, return 202 and start a job to create it asynchronously.",
         "operationId": "create_item_items__post",
         "requestBody": {
           "required": true,
@@ -25,12 +25,12 @@
           }
         },
         "responses": {
-          "201": {
+          "202": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ItemRead"
+                  "$ref": "#/components/schemas/JobRead"
                 }
               }
             }
@@ -140,6 +140,50 @@
         }
       }
     },
+    "/items/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "Items"
+        ],
+        "summary": "Get Job Status",
+        "description": "Polling for the status of an item asynchronously.",
+        "operationId": "get_job_status_items_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Job Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobRead"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/items/{item_id}": {
       "get": {
         "tags": [
@@ -199,6 +243,15 @@
               "type": "string",
               "format": "uuid",
               "title": "Item Id"
+            }
+          },
+          {
+            "name": "if-match",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "If-Match"
             }
           }
         ],
@@ -368,17 +421,18 @@
             "title": "Price",
             "description": "Price of the item must be greater than 0."
           },
-          "location": {
+          "address_UUID": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "uuid"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Location",
-            "description": "The position for transaction, can be online or a physical place."
+            "title": "Address Uuid",
+            "description": "The UUID of position for transaction chosen from user's address lists, can be online or a physical place, "
           },
           "image_urls": {
             "items": {
@@ -412,6 +466,7 @@
         "description": "Creation payload for an item and its post.",
         "examples": [
           {
+            "address_UUID": "99999999-9999-4999-8999-000000000001",
             "category": [
               "FURNITURE"
             ],
@@ -420,7 +475,6 @@
             "image_urls": [
               "http://example.com/image1.jpg"
             ],
-            "location": "400W 113th St",
             "price": 200.0,
             "title": "Sofa",
             "transaction_type": "SALE",
@@ -476,17 +530,18 @@
             "title": "Price",
             "description": "Price of the item must be greater than 0."
           },
-          "location": {
+          "address_UUID": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "uuid"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Location",
-            "description": "The position for transaction, can be online or a physical place."
+            "title": "Address Uuid",
+            "description": "The UUID of position for transaction chosen from user's address lists, can be online or a physical place, "
           },
           "image_urls": {
             "items": {
@@ -538,6 +593,7 @@
         "description": "Server representation returned to clients.",
         "examples": [
           {
+            "address_UUID": "99999999-9999-4999-8999-000000000001",
             "category": [
               "FURNITURE"
             ],
@@ -548,7 +604,6 @@
               "http://example.com/image1.jpg"
             ],
             "item_UUID": "99999999-9999-4999-8999-999999999999",
-            "location": "400 W 113th St",
             "price": 200.0,
             "title": "sofa",
             "transaction_type": "SALE",
@@ -633,16 +688,17 @@
             "title": "Price",
             "description": "Price of the item must be greater than 0."
           },
-          "location": {
+          "address_UUID": {
             "anyOf": [
               {
-                "type": "string"
+                "type": "string",
+                "format": "uuid"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Location",
+            "title": "Address Uuid",
             "description": "The position for transaction, can be online or a physical place."
           },
           "image_urls": {
@@ -664,6 +720,57 @@
         "type": "object",
         "title": "ItemUpdate",
         "description": "Partial update for an item and its post."
+      },
+      "JobRead": {
+        "properties": {
+          "job_UUID": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Job Uuid"
+          },
+          "status": {
+            "$ref": "#/components/schemas/JobStatus"
+          },
+          "item_UUID": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Item Uuid"
+          },
+          "error_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "job_UUID",
+          "status"
+        ],
+        "title": "JobRead"
+      },
+      "JobStatus": {
+        "type": "string",
+        "enum": [
+          "PENDING",
+          "RUNNING",
+          "COMPLETED",
+          "FAILED"
+        ],
+        "title": "JobStatus"
       },
       "TransactionType": {
         "type": "string",

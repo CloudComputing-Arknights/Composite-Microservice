@@ -26,6 +26,7 @@ class UserUpdate:
         email (None | str | Unset):  Example: alice@newmail.com.
         phone (None | str | Unset):  Example: +44 20 7946 0958.
         birth_date (datetime.date | None | Unset):  Example: 2000-09-01.
+        avatar_url (None | str | Unset): URL to avatar image. Example: https://cdn.neighborhood.com/avatars/alice.png.
         addresses (list[AddressBase] | None | Unset): Replace the entire set of addresses with this list. Example:
             [{'city': 'London', 'country': 'UK', 'id': 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'postal_code': 'SW1A 2AA',
             'street': '10 Downing St'}].
@@ -35,6 +36,7 @@ class UserUpdate:
     email: None | str | Unset = UNSET
     phone: None | str | Unset = UNSET
     birth_date: datetime.date | None | Unset = UNSET
+    avatar_url: None | str | Unset = UNSET
     addresses: list[AddressBase] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -65,6 +67,12 @@ class UserUpdate:
         else:
             birth_date = self.birth_date
 
+        avatar_url: None | str | Unset
+        if isinstance(self.avatar_url, Unset):
+            avatar_url = UNSET
+        else:
+            avatar_url = self.avatar_url
+
         addresses: list[dict[str, Any]] | None | Unset
         if isinstance(self.addresses, Unset):
             addresses = UNSET
@@ -88,6 +96,8 @@ class UserUpdate:
             field_dict["phone"] = phone
         if birth_date is not UNSET:
             field_dict["birth_date"] = birth_date
+        if avatar_url is not UNSET:
+            field_dict["avatar_url"] = avatar_url
         if addresses is not UNSET:
             field_dict["addresses"] = addresses
 
@@ -143,6 +153,15 @@ class UserUpdate:
 
         birth_date = _parse_birth_date(d.pop("birth_date", UNSET))
 
+        def _parse_avatar_url(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        avatar_url = _parse_avatar_url(d.pop("avatar_url", UNSET))
+
         def _parse_addresses(data: object) -> list[AddressBase] | None | Unset:
             if data is None:
                 return data
@@ -170,6 +189,7 @@ class UserUpdate:
             email=email,
             phone=phone,
             birth_date=birth_date,
+            avatar_url=avatar_url,
             addresses=addresses,
         )
 

@@ -26,7 +26,8 @@ class ItemCreate:
         price (float): Price of the item must be greater than 0.
         description (None | str | Unset): Description of the item in the post.
         category (list[CategoryType] | None | Unset): Category of the posted item.
-        location (None | str | Unset): The position for transaction, can be online or a physical place.
+        address_uuid (None | Unset | UUID): The UUID of position for transaction chosen from user's address lists, can
+            be online or a physical place,
         image_urls (list[str] | Unset): The list of URL images of the post
         user_uuid (None | Unset | UUID):
     """
@@ -37,7 +38,7 @@ class ItemCreate:
     price: float
     description: None | str | Unset = UNSET
     category: list[CategoryType] | None | Unset = UNSET
-    location: None | str | Unset = UNSET
+    address_uuid: None | Unset | UUID = UNSET
     image_urls: list[str] | Unset = UNSET
     user_uuid: None | Unset | UUID = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -69,11 +70,13 @@ class ItemCreate:
         else:
             category = self.category
 
-        location: None | str | Unset
-        if isinstance(self.location, Unset):
-            location = UNSET
+        address_uuid: None | str | Unset
+        if isinstance(self.address_uuid, Unset):
+            address_uuid = UNSET
+        elif isinstance(self.address_uuid, UUID):
+            address_uuid = str(self.address_uuid)
         else:
-            location = self.location
+            address_uuid = self.address_uuid
 
         image_urls: list[str] | Unset = UNSET
         if not isinstance(self.image_urls, Unset):
@@ -101,8 +104,8 @@ class ItemCreate:
             field_dict["description"] = description
         if category is not UNSET:
             field_dict["category"] = category
-        if location is not UNSET:
-            field_dict["location"] = location
+        if address_uuid is not UNSET:
+            field_dict["address_UUID"] = address_uuid
         if image_urls is not UNSET:
             field_dict["image_urls"] = image_urls
         if user_uuid is not UNSET:
@@ -152,14 +155,22 @@ class ItemCreate:
 
         category = _parse_category(d.pop("category", UNSET))
 
-        def _parse_location(data: object) -> None | str | Unset:
+        def _parse_address_uuid(data: object) -> None | Unset | UUID:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | str | Unset, data)
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                address_uuid_type_0 = UUID(data)
 
-        location = _parse_location(d.pop("location", UNSET))
+                return address_uuid_type_0
+            except:  # noqa: E722
+                pass
+            return cast(None | Unset | UUID, data)
+
+        address_uuid = _parse_address_uuid(d.pop("address_UUID", UNSET))
 
         image_urls = cast(list[str], d.pop("image_urls", UNSET))
 
@@ -187,7 +198,7 @@ class ItemCreate:
             price=price,
             description=description,
             category=category,
-            location=location,
+            address_uuid=address_uuid,
             image_urls=image_urls,
             user_uuid=user_uuid,
         )

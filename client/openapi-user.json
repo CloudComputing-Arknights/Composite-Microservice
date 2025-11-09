@@ -136,6 +136,29 @@
               "title": "Country"
             },
             "description": "Filter by country"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
           }
         ],
         "responses": {
@@ -143,13 +166,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/AddressRead"
-                  },
-                  "title": "Response List Addresses Addresses Get"
-                }
+                "schema": {}
               }
             }
           },
@@ -415,6 +432,29 @@
               "title": "Country"
             },
             "description": "Filter by country of at least one address"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0,
+              "title": "Offset"
+            }
           }
         ],
         "responses": {
@@ -422,13 +462,7 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/UserRead"
-                  },
-                  "title": "Response List Users Users Get"
-                }
+                "schema": {}
               }
             }
           },
@@ -564,20 +598,66 @@
         }
       }
     },
-    "/db/health": {
-      "get": {
-        "summary": "Db Health",
-        "operationId": "db_health_db_health_get",
+    "/auth/token": {
+      "post": {
+        "summary": "Login",
+        "description": "Accepts form fields: username, password.\nReturns: {access_token, token_type}",
+        "operationId": "login_auth_token_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_login_auth_token_post"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
               }
             }
           }
         }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Read Me",
+        "operationId": "read_me_auth_me_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRead"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
       }
     },
     "/": {
@@ -915,6 +995,65 @@
           }
         ]
       },
+      "Body_login_auth_token_post": {
+        "properties": {
+          "grant_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "^password$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grant Type"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "title": "Password"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": ""
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "client_secret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "format": "password",
+            "title": "Client Secret"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "Body_login_auth_token_post"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -927,6 +1066,24 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "Token": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type",
+            "default": "bearer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token"
+        ],
+        "title": "Token"
       },
       "UserCreate": {
         "properties": {
@@ -970,6 +1127,21 @@
             "description": "Date of birth (YYYY-MM-DD).",
             "example": "2000-09-01"
           },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url",
+            "description": "URL to avatar image.",
+            "example": "https://cdn.neighborhood.com/avatars/alice.png"
+          },
           "addresses": {
             "items": {
               "$ref": "#/components/schemas/AddressBase"
@@ -987,12 +1159,20 @@
                 "street": "123 Main St"
               }
             ]
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "title": "Password",
+            "description": "Plaintext password (will be hashed server-side).",
+            "example": "Str0ngP@ss!"
           }
         },
         "type": "object",
         "required": [
           "username",
-          "email"
+          "email",
+          "password"
         ],
         "title": "UserCreate",
         "description": "Creation payload for a User.",
@@ -1000,17 +1180,18 @@
           {
             "addresses": [
               {
-                "city": "London",
-                "country": "UK",
-                "id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
-                "postal_code": "NW1 6XE",
-                "street": "221B Baker St"
+                "city": "New York",
+                "country": "USA",
+                "id": "550e8400-e29b-41d4-a716-446655440000",
+                "postal_code": "10001",
+                "state": "NY",
+                "street": "123 Main St"
               }
             ],
-            "birth_date": "1999-04-02",
-            "email": "bob@example.com",
-            "phone": "+1-202-555-0101",
-            "username": "bob"
+            "birth_date": "2000-09-01",
+            "email": "alice@example.com",
+            "phone": "+1-212-555-0199",
+            "username": "alice"
           }
         ]
       },
@@ -1055,6 +1236,21 @@
             "title": "Birth Date",
             "description": "Date of birth (YYYY-MM-DD).",
             "example": "2000-09-01"
+          },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url",
+            "description": "URL to avatar image.",
+            "example": "https://cdn.neighborhood.com/avatars/alice.png"
           },
           "addresses": {
             "items": {
@@ -1177,6 +1373,21 @@
             "title": "Birth Date",
             "example": "2000-09-01"
           },
+          "avatar_url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "format": "uri"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avatar Url",
+            "description": "URL to avatar image.",
+            "example": "https://cdn.neighborhood.com/avatars/alice.png"
+          },
           "addresses": {
             "anyOf": [
               {
@@ -1257,6 +1468,17 @@
           "type"
         ],
         "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {},
+            "tokenUrl": "/auth/token"
+          }
+        }
       }
     }
   }

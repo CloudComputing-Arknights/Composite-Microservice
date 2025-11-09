@@ -16,8 +16,10 @@ def _get_kwargs(
     item_id: UUID,
     *,
     body: ItemUpdate,
+    if_match: str,
 ) -> dict[str, Any]:
     headers: dict[str, Any] = {}
+    headers["if-match"] = if_match
 
     _kwargs: dict[str, Any] = {
         "method": "patch",
@@ -67,6 +69,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: ItemUpdate,
+    if_match: str,
 ) -> Response[HTTPValidationError | ItemRead]:
     """Update Item
 
@@ -74,6 +77,7 @@ def sync_detailed(
 
     Args:
         item_id (UUID):
+        if_match (str):
         body (ItemUpdate): Partial update for an item and its post.
 
     Raises:
@@ -87,6 +91,7 @@ def sync_detailed(
     kwargs = _get_kwargs(
         item_id=item_id,
         body=body,
+        if_match=if_match,
     )
 
     response = client.get_httpx_client().request(
@@ -101,6 +106,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     body: ItemUpdate,
+    if_match: str,
 ) -> HTTPValidationError | ItemRead | None:
     """Update Item
 
@@ -108,6 +114,7 @@ def sync(
 
     Args:
         item_id (UUID):
+        if_match (str):
         body (ItemUpdate): Partial update for an item and its post.
 
     Raises:
@@ -122,6 +129,7 @@ def sync(
         item_id=item_id,
         client=client,
         body=body,
+        if_match=if_match,
     ).parsed
 
 
@@ -130,6 +138,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     body: ItemUpdate,
+    if_match: str,
 ) -> Response[HTTPValidationError | ItemRead]:
     """Update Item
 
@@ -137,6 +146,7 @@ async def asyncio_detailed(
 
     Args:
         item_id (UUID):
+        if_match (str):
         body (ItemUpdate): Partial update for an item and its post.
 
     Raises:
@@ -150,6 +160,7 @@ async def asyncio_detailed(
     kwargs = _get_kwargs(
         item_id=item_id,
         body=body,
+        if_match=if_match,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -162,6 +173,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     body: ItemUpdate,
+    if_match: str,
 ) -> HTTPValidationError | ItemRead | None:
     """Update Item
 
@@ -169,6 +181,7 @@ async def asyncio(
 
     Args:
         item_id (UUID):
+        if_match (str):
         body (ItemUpdate): Partial update for an item and its post.
 
     Raises:
@@ -184,5 +197,6 @@ async def asyncio(
             item_id=item_id,
             client=client,
             body=body,
+            if_match=if_match,
         )
     ).parsed

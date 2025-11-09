@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
+from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -25,7 +26,7 @@ class ItemUpdate:
         category (list[CategoryType] | None | Unset): Category of the posted item.
         transaction_type (None | TransactionType | Unset): Type of the transaction can be SALE or RENT.
         price (float | None | Unset): Price of the item must be greater than 0.
-        location (None | str | Unset): The position for transaction, can be online or a physical place.
+        address_uuid (None | Unset | UUID): The position for transaction, can be online or a physical place.
         image_urls (list[str] | None | Unset): The list of URL images of the post
     """
 
@@ -35,7 +36,7 @@ class ItemUpdate:
     category: list[CategoryType] | None | Unset = UNSET
     transaction_type: None | TransactionType | Unset = UNSET
     price: float | None | Unset = UNSET
-    location: None | str | Unset = UNSET
+    address_uuid: None | Unset | UUID = UNSET
     image_urls: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -86,11 +87,13 @@ class ItemUpdate:
         else:
             price = self.price
 
-        location: None | str | Unset
-        if isinstance(self.location, Unset):
-            location = UNSET
+        address_uuid: None | str | Unset
+        if isinstance(self.address_uuid, Unset):
+            address_uuid = UNSET
+        elif isinstance(self.address_uuid, UUID):
+            address_uuid = str(self.address_uuid)
         else:
-            location = self.location
+            address_uuid = self.address_uuid
 
         image_urls: list[str] | None | Unset
         if isinstance(self.image_urls, Unset):
@@ -116,8 +119,8 @@ class ItemUpdate:
             field_dict["transaction_type"] = transaction_type
         if price is not UNSET:
             field_dict["price"] = price
-        if location is not UNSET:
-            field_dict["location"] = location
+        if address_uuid is not UNSET:
+            field_dict["address_UUID"] = address_uuid
         if image_urls is not UNSET:
             field_dict["image_urls"] = image_urls
 
@@ -210,14 +213,22 @@ class ItemUpdate:
 
         price = _parse_price(d.pop("price", UNSET))
 
-        def _parse_location(data: object) -> None | str | Unset:
+        def _parse_address_uuid(data: object) -> None | Unset | UUID:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            return cast(None | str | Unset, data)
+            try:
+                if not isinstance(data, str):
+                    raise TypeError()
+                address_uuid_type_0 = UUID(data)
 
-        location = _parse_location(d.pop("location", UNSET))
+                return address_uuid_type_0
+            except:  # noqa: E722
+                pass
+            return cast(None | Unset | UUID, data)
+
+        address_uuid = _parse_address_uuid(d.pop("address_UUID", UNSET))
 
         def _parse_image_urls(data: object) -> list[str] | None | Unset:
             if data is None:
@@ -243,7 +254,7 @@ class ItemUpdate:
             category=category,
             transaction_type=transaction_type,
             price=price,
-            location=location,
+            address_uuid=address_uuid,
             image_urls=image_urls,
         )
 

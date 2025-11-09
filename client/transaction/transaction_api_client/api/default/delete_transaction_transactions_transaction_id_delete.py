@@ -11,7 +11,7 @@ from ...types import Response
 
 
 def _get_kwargs(
-    transaction_id: int,
+    transaction_id: str,
 ) -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "delete",
@@ -52,14 +52,14 @@ def _build_response(
 
 
 def sync_detailed(
-    transaction_id: int,
+    transaction_id: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[HTTPValidationError | Transaction]:
     """Delete Transaction
 
     Args:
-        transaction_id (int):
+        transaction_id (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -81,14 +81,14 @@ def sync_detailed(
 
 
 def sync(
-    transaction_id: int,
+    transaction_id: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> HTTPValidationError | Transaction | None:
     """Delete Transaction
 
     Args:
-        transaction_id (int):
+        transaction_id (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -105,14 +105,14 @@ def sync(
 
 
 async def asyncio_detailed(
-    transaction_id: int,
+    transaction_id: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[HTTPValidationError | Transaction]:
     """Delete Transaction
 
     Args:
-        transaction_id (int):
+        transaction_id (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -132,14 +132,14 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    transaction_id: int,
+    transaction_id: str,
     *,
     client: AuthenticatedClient | Client,
 ) -> HTTPValidationError | Transaction | None:
     """Delete Transaction
 
     Args:
-        transaction_id (int):
+        transaction_id (str):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

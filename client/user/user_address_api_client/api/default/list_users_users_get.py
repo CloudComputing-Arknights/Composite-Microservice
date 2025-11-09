@@ -6,7 +6,6 @@ import httpx
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.user_read import UserRead
 from ...types import UNSET, Response, Unset
 
 
@@ -17,6 +16,8 @@ def _get_kwargs(
     phone: None | str | Unset = UNSET,
     city: None | str | Unset = UNSET,
     country: None | str | Unset = UNSET,
+    limit: int | Unset = 50,
+    offset: int | Unset = 0,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
 
@@ -55,6 +56,10 @@ def _get_kwargs(
         json_country = country
     params["country"] = json_country
 
+    params["limit"] = limit
+
+    params["offset"] = offset
+
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
     _kwargs: dict[str, Any] = {
@@ -68,15 +73,9 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | list[UserRead] | None:
+) -> Any | HTTPValidationError | None:
     if response.status_code == 200:
-        response_200 = []
-        _response_200 = response.json()
-        for response_200_item_data in _response_200:
-            response_200_item = UserRead.from_dict(response_200_item_data)
-
-            response_200.append(response_200_item)
-
+        response_200 = response.json()
         return response_200
 
     if response.status_code == 422:
@@ -92,7 +91,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | list[UserRead]]:
+) -> Response[Any | HTTPValidationError]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -109,7 +108,9 @@ def sync_detailed(
     phone: None | str | Unset = UNSET,
     city: None | str | Unset = UNSET,
     country: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | list[UserRead]]:
+    limit: int | Unset = 50,
+    offset: int | Unset = 0,
+) -> Response[Any | HTTPValidationError]:
     """List Users
 
     Args:
@@ -118,13 +119,15 @@ def sync_detailed(
         phone (None | str | Unset): Filter by phone number
         city (None | str | Unset): Filter by city of at least one address
         country (None | str | Unset): Filter by country of at least one address
+        limit (int | Unset):  Default: 50.
+        offset (int | Unset):  Default: 0.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | list[UserRead]]
+        Response[Any | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
@@ -133,6 +136,8 @@ def sync_detailed(
         phone=phone,
         city=city,
         country=country,
+        limit=limit,
+        offset=offset,
     )
 
     response = client.get_httpx_client().request(
@@ -150,7 +155,9 @@ def sync(
     phone: None | str | Unset = UNSET,
     city: None | str | Unset = UNSET,
     country: None | str | Unset = UNSET,
-) -> HTTPValidationError | list[UserRead] | None:
+    limit: int | Unset = 50,
+    offset: int | Unset = 0,
+) -> Any | HTTPValidationError | None:
     """List Users
 
     Args:
@@ -159,13 +166,15 @@ def sync(
         phone (None | str | Unset): Filter by phone number
         city (None | str | Unset): Filter by city of at least one address
         country (None | str | Unset): Filter by country of at least one address
+        limit (int | Unset):  Default: 50.
+        offset (int | Unset):  Default: 0.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | list[UserRead]
+        Any | HTTPValidationError
     """
 
     return sync_detailed(
@@ -175,6 +184,8 @@ def sync(
         phone=phone,
         city=city,
         country=country,
+        limit=limit,
+        offset=offset,
     ).parsed
 
 
@@ -186,7 +197,9 @@ async def asyncio_detailed(
     phone: None | str | Unset = UNSET,
     city: None | str | Unset = UNSET,
     country: None | str | Unset = UNSET,
-) -> Response[HTTPValidationError | list[UserRead]]:
+    limit: int | Unset = 50,
+    offset: int | Unset = 0,
+) -> Response[Any | HTTPValidationError]:
     """List Users
 
     Args:
@@ -195,13 +208,15 @@ async def asyncio_detailed(
         phone (None | str | Unset): Filter by phone number
         city (None | str | Unset): Filter by city of at least one address
         country (None | str | Unset): Filter by country of at least one address
+        limit (int | Unset):  Default: 50.
+        offset (int | Unset):  Default: 0.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | list[UserRead]]
+        Response[Any | HTTPValidationError]
     """
 
     kwargs = _get_kwargs(
@@ -210,6 +225,8 @@ async def asyncio_detailed(
         phone=phone,
         city=city,
         country=country,
+        limit=limit,
+        offset=offset,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -225,7 +242,9 @@ async def asyncio(
     phone: None | str | Unset = UNSET,
     city: None | str | Unset = UNSET,
     country: None | str | Unset = UNSET,
-) -> HTTPValidationError | list[UserRead] | None:
+    limit: int | Unset = 50,
+    offset: int | Unset = 0,
+) -> Any | HTTPValidationError | None:
     """List Users
 
     Args:
@@ -234,13 +253,15 @@ async def asyncio(
         phone (None | str | Unset): Filter by phone number
         city (None | str | Unset): Filter by city of at least one address
         country (None | str | Unset): Filter by country of at least one address
+        limit (int | Unset):  Default: 50.
+        offset (int | Unset):  Default: 0.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | list[UserRead]
+        Any | HTTPValidationError
     """
 
     return (
@@ -251,5 +272,7 @@ async def asyncio(
             phone=phone,
             city=city,
             country=country,
+            limit=limit,
+            offset=offset,
         )
     ).parsed

@@ -5,34 +5,24 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.http_validation_error import HTTPValidationError
-from ...models.transaction import Transaction
+from ...models.user_read import UserRead
 from ...types import Response
 
 
-def _get_kwargs(
-    transaction_id: str,
-) -> dict[str, Any]:
+def _get_kwargs() -> dict[str, Any]:
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/transactions/{transaction_id}",
+        "url": "/auth/me",
     }
 
     return _kwargs
 
 
-def _parse_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | Transaction | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> UserRead | None:
     if response.status_code == 200:
-        response_200 = Transaction.from_dict(response.json())
+        response_200 = UserRead.from_dict(response.json())
 
         return response_200
-
-    if response.status_code == 422:
-        response_422 = HTTPValidationError.from_dict(response.json())
-
-        return response_422
 
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
@@ -40,9 +30,7 @@ def _parse_response(
         return None
 
 
-def _build_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | Transaction]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[UserRead]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -52,26 +40,20 @@ def _build_response(
 
 
 def sync_detailed(
-    transaction_id: str,
     *,
-    client: AuthenticatedClient | Client,
-) -> Response[HTTPValidationError | Transaction]:
-    """Get Transaction
-
-    Args:
-        transaction_id (str):
+    client: AuthenticatedClient,
+) -> Response[UserRead]:
+    """Read Me
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | Transaction]
+        Response[UserRead]
     """
 
-    kwargs = _get_kwargs(
-        transaction_id=transaction_id,
-    )
+    kwargs = _get_kwargs()
 
     response = client.get_httpx_client().request(
         **kwargs,
@@ -81,50 +63,39 @@ def sync_detailed(
 
 
 def sync(
-    transaction_id: str,
     *,
-    client: AuthenticatedClient | Client,
-) -> HTTPValidationError | Transaction | None:
-    """Get Transaction
-
-    Args:
-        transaction_id (str):
+    client: AuthenticatedClient,
+) -> UserRead | None:
+    """Read Me
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | Transaction
+        UserRead
     """
 
     return sync_detailed(
-        transaction_id=transaction_id,
         client=client,
     ).parsed
 
 
 async def asyncio_detailed(
-    transaction_id: str,
     *,
-    client: AuthenticatedClient | Client,
-) -> Response[HTTPValidationError | Transaction]:
-    """Get Transaction
-
-    Args:
-        transaction_id (str):
+    client: AuthenticatedClient,
+) -> Response[UserRead]:
+    """Read Me
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[HTTPValidationError | Transaction]
+        Response[UserRead]
     """
 
-    kwargs = _get_kwargs(
-        transaction_id=transaction_id,
-    )
+    kwargs = _get_kwargs()
 
     response = await client.get_async_httpx_client().request(**kwargs)
 
@@ -132,26 +103,21 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    transaction_id: str,
     *,
-    client: AuthenticatedClient | Client,
-) -> HTTPValidationError | Transaction | None:
-    """Get Transaction
-
-    Args:
-        transaction_id (str):
+    client: AuthenticatedClient,
+) -> UserRead | None:
+    """Read Me
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        HTTPValidationError | Transaction
+        UserRead
     """
 
     return (
         await asyncio_detailed(
-            transaction_id=transaction_id,
             client=client,
         )
     ).parsed

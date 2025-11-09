@@ -1,42 +1,34 @@
 from http import HTTPStatus
 from typing import Any
+from uuid import UUID
 
 import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.http_validation_error import HTTPValidationError
-from ...models.item_create import ItemCreate
 from ...models.job_read import JobRead
 from ...types import Response
 
 
 def _get_kwargs(
-    *,
-    body: ItemCreate,
+    job_id: UUID,
 ) -> dict[str, Any]:
-    headers: dict[str, Any] = {}
-
     _kwargs: dict[str, Any] = {
-        "method": "post",
-        "url": "/items/",
+        "method": "get",
+        "url": f"/items/jobs/{job_id}",
     }
 
-    _kwargs["json"] = body.to_dict()
-
-    headers["Content-Type"] = "application/json"
-
-    _kwargs["headers"] = headers
     return _kwargs
 
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> HTTPValidationError | JobRead | None:
-    if response.status_code == 202:
-        response_202 = JobRead.from_dict(response.json())
+    if response.status_code == 200:
+        response_200 = JobRead.from_dict(response.json())
 
-        return response_202
+        return response_200
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
@@ -61,16 +53,16 @@ def _build_response(
 
 
 def sync_detailed(
+    job_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: ItemCreate,
 ) -> Response[HTTPValidationError | JobRead]:
-    """Create Item
+    """Get Job Status
 
-     Accept the request of creating a new item, return 202 and start a job to create it asynchronously.
+     Polling for the status of an item asynchronously.
 
     Args:
-        body (ItemCreate): Creation payload for an item and its post.
+        job_id (UUID):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -81,7 +73,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
-        body=body,
+        job_id=job_id,
     )
 
     response = client.get_httpx_client().request(
@@ -92,16 +84,16 @@ def sync_detailed(
 
 
 def sync(
+    job_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: ItemCreate,
 ) -> HTTPValidationError | JobRead | None:
-    """Create Item
+    """Get Job Status
 
-     Accept the request of creating a new item, return 202 and start a job to create it asynchronously.
+     Polling for the status of an item asynchronously.
 
     Args:
-        body (ItemCreate): Creation payload for an item and its post.
+        job_id (UUID):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -112,22 +104,22 @@ def sync(
     """
 
     return sync_detailed(
+        job_id=job_id,
         client=client,
-        body=body,
     ).parsed
 
 
 async def asyncio_detailed(
+    job_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: ItemCreate,
 ) -> Response[HTTPValidationError | JobRead]:
-    """Create Item
+    """Get Job Status
 
-     Accept the request of creating a new item, return 202 and start a job to create it asynchronously.
+     Polling for the status of an item asynchronously.
 
     Args:
-        body (ItemCreate): Creation payload for an item and its post.
+        job_id (UUID):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -138,7 +130,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
-        body=body,
+        job_id=job_id,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -147,16 +139,16 @@ async def asyncio_detailed(
 
 
 async def asyncio(
+    job_id: UUID,
     *,
     client: AuthenticatedClient | Client,
-    body: ItemCreate,
 ) -> HTTPValidationError | JobRead | None:
-    """Create Item
+    """Get Job Status
 
-     Accept the request of creating a new item, return 202 and start a job to create it asynchronously.
+     Polling for the status of an item asynchronously.
 
     Args:
-        body (ItemCreate): Creation payload for an item and its post.
+        job_id (UUID):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -168,7 +160,7 @@ async def asyncio(
 
     return (
         await asyncio_detailed(
+            job_id=job_id,
             client=client,
-            body=body,
         )
     ).parsed

@@ -9,6 +9,7 @@ from ...models.http_validation_error import HTTPValidationError
 from ...models.list_transactions_transactions_get_status_param_type_0 import (
     ListTransactionsTransactionsGetStatusParamType0,
 )
+from ...models.list_transactions_transactions_get_type_type_0 import ListTransactionsTransactionsGetTypeType0
 from ...models.transaction import Transaction
 from ...types import UNSET, Response, Unset
 
@@ -18,7 +19,8 @@ def _get_kwargs(
     status_param: ListTransactionsTransactionsGetStatusParamType0 | None | Unset = UNSET,
     initiator_user_id: None | str | Unset = UNSET,
     receiver_user_id: None | str | Unset = UNSET,
-    item_id: int | None | Unset = UNSET,
+    requested_item_id: None | str | Unset = UNSET,
+    type_: ListTransactionsTransactionsGetTypeType0 | None | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
 ) -> dict[str, Any]:
@@ -38,21 +40,30 @@ def _get_kwargs(
         json_initiator_user_id = UNSET
     else:
         json_initiator_user_id = initiator_user_id
-    params["initiatorUserId"] = json_initiator_user_id
+    params["initiator_user_id"] = json_initiator_user_id
 
     json_receiver_user_id: None | str | Unset
     if isinstance(receiver_user_id, Unset):
         json_receiver_user_id = UNSET
     else:
         json_receiver_user_id = receiver_user_id
-    params["receiverUserId"] = json_receiver_user_id
+    params["receiver_user_id"] = json_receiver_user_id
 
-    json_item_id: int | None | Unset
-    if isinstance(item_id, Unset):
-        json_item_id = UNSET
+    json_requested_item_id: None | str | Unset
+    if isinstance(requested_item_id, Unset):
+        json_requested_item_id = UNSET
     else:
-        json_item_id = item_id
-    params["itemId"] = json_item_id
+        json_requested_item_id = requested_item_id
+    params["requested_item_id"] = json_requested_item_id
+
+    json_type_: None | str | Unset
+    if isinstance(type_, Unset):
+        json_type_ = UNSET
+    elif isinstance(type_, ListTransactionsTransactionsGetTypeType0):
+        json_type_ = type_.value
+    else:
+        json_type_ = type_
+    params["type"] = json_type_
 
     params["limit"] = limit
 
@@ -110,7 +121,8 @@ def sync_detailed(
     status_param: ListTransactionsTransactionsGetStatusParamType0 | None | Unset = UNSET,
     initiator_user_id: None | str | Unset = UNSET,
     receiver_user_id: None | str | Unset = UNSET,
-    item_id: int | None | Unset = UNSET,
+    requested_item_id: None | str | Unset = UNSET,
+    type_: ListTransactionsTransactionsGetTypeType0 | None | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
 ) -> Response[HTTPValidationError | list[Transaction]]:
@@ -120,7 +132,8 @@ def sync_detailed(
         status_param (ListTransactionsTransactionsGetStatusParamType0 | None | Unset):
         initiator_user_id (None | str | Unset):
         receiver_user_id (None | str | Unset):
-        item_id (int | None | Unset):
+        requested_item_id (None | str | Unset):
+        type_ (ListTransactionsTransactionsGetTypeType0 | None | Unset):
         limit (int | Unset):  Default: 50.
         offset (int | Unset):  Default: 0.
 
@@ -136,7 +149,8 @@ def sync_detailed(
         status_param=status_param,
         initiator_user_id=initiator_user_id,
         receiver_user_id=receiver_user_id,
-        item_id=item_id,
+        requested_item_id=requested_item_id,
+        type_=type_,
         limit=limit,
         offset=offset,
     )
@@ -154,7 +168,8 @@ def sync(
     status_param: ListTransactionsTransactionsGetStatusParamType0 | None | Unset = UNSET,
     initiator_user_id: None | str | Unset = UNSET,
     receiver_user_id: None | str | Unset = UNSET,
-    item_id: int | None | Unset = UNSET,
+    requested_item_id: None | str | Unset = UNSET,
+    type_: ListTransactionsTransactionsGetTypeType0 | None | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
 ) -> HTTPValidationError | list[Transaction] | None:
@@ -164,7 +179,8 @@ def sync(
         status_param (ListTransactionsTransactionsGetStatusParamType0 | None | Unset):
         initiator_user_id (None | str | Unset):
         receiver_user_id (None | str | Unset):
-        item_id (int | None | Unset):
+        requested_item_id (None | str | Unset):
+        type_ (ListTransactionsTransactionsGetTypeType0 | None | Unset):
         limit (int | Unset):  Default: 50.
         offset (int | Unset):  Default: 0.
 
@@ -181,7 +197,8 @@ def sync(
         status_param=status_param,
         initiator_user_id=initiator_user_id,
         receiver_user_id=receiver_user_id,
-        item_id=item_id,
+        requested_item_id=requested_item_id,
+        type_=type_,
         limit=limit,
         offset=offset,
     ).parsed
@@ -193,7 +210,8 @@ async def asyncio_detailed(
     status_param: ListTransactionsTransactionsGetStatusParamType0 | None | Unset = UNSET,
     initiator_user_id: None | str | Unset = UNSET,
     receiver_user_id: None | str | Unset = UNSET,
-    item_id: int | None | Unset = UNSET,
+    requested_item_id: None | str | Unset = UNSET,
+    type_: ListTransactionsTransactionsGetTypeType0 | None | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
 ) -> Response[HTTPValidationError | list[Transaction]]:
@@ -203,7 +221,8 @@ async def asyncio_detailed(
         status_param (ListTransactionsTransactionsGetStatusParamType0 | None | Unset):
         initiator_user_id (None | str | Unset):
         receiver_user_id (None | str | Unset):
-        item_id (int | None | Unset):
+        requested_item_id (None | str | Unset):
+        type_ (ListTransactionsTransactionsGetTypeType0 | None | Unset):
         limit (int | Unset):  Default: 50.
         offset (int | Unset):  Default: 0.
 
@@ -219,7 +238,8 @@ async def asyncio_detailed(
         status_param=status_param,
         initiator_user_id=initiator_user_id,
         receiver_user_id=receiver_user_id,
-        item_id=item_id,
+        requested_item_id=requested_item_id,
+        type_=type_,
         limit=limit,
         offset=offset,
     )
@@ -235,7 +255,8 @@ async def asyncio(
     status_param: ListTransactionsTransactionsGetStatusParamType0 | None | Unset = UNSET,
     initiator_user_id: None | str | Unset = UNSET,
     receiver_user_id: None | str | Unset = UNSET,
-    item_id: int | None | Unset = UNSET,
+    requested_item_id: None | str | Unset = UNSET,
+    type_: ListTransactionsTransactionsGetTypeType0 | None | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
 ) -> HTTPValidationError | list[Transaction] | None:
@@ -245,7 +266,8 @@ async def asyncio(
         status_param (ListTransactionsTransactionsGetStatusParamType0 | None | Unset):
         initiator_user_id (None | str | Unset):
         receiver_user_id (None | str | Unset):
-        item_id (int | None | Unset):
+        requested_item_id (None | str | Unset):
+        type_ (ListTransactionsTransactionsGetTypeType0 | None | Unset):
         limit (int | Unset):  Default: 50.
         offset (int | Unset):  Default: 0.
 
@@ -263,7 +285,8 @@ async def asyncio(
             status_param=status_param,
             initiator_user_id=initiator_user_id,
             receiver_user_id=receiver_user_id,
-            item_id=item_id,
+            requested_item_id=requested_item_id,
+            type_=type_,
             limit=limit,
             offset=offset,
         )

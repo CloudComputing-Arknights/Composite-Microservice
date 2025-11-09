@@ -12,7 +12,7 @@ from ...types import Response
 
 
 def _get_kwargs(
-    transaction_id: int,
+    transaction_id: str,
     *,
     body: UpdateStatusRequest,
 ) -> dict[str, Any]:
@@ -62,7 +62,7 @@ def _build_response(
 
 
 def sync_detailed(
-    transaction_id: int,
+    transaction_id: str,
     *,
     client: AuthenticatedClient | Client,
     body: UpdateStatusRequest,
@@ -70,7 +70,7 @@ def sync_detailed(
     """Update Transaction
 
     Args:
-        transaction_id (int):
+        transaction_id (str):
         body (UpdateStatusRequest):
 
     Raises:
@@ -94,7 +94,7 @@ def sync_detailed(
 
 
 def sync(
-    transaction_id: int,
+    transaction_id: str,
     *,
     client: AuthenticatedClient | Client,
     body: UpdateStatusRequest,
@@ -102,7 +102,7 @@ def sync(
     """Update Transaction
 
     Args:
-        transaction_id (int):
+        transaction_id (str):
         body (UpdateStatusRequest):
 
     Raises:
@@ -121,7 +121,7 @@ def sync(
 
 
 async def asyncio_detailed(
-    transaction_id: int,
+    transaction_id: str,
     *,
     client: AuthenticatedClient | Client,
     body: UpdateStatusRequest,
@@ -129,7 +129,7 @@ async def asyncio_detailed(
     """Update Transaction
 
     Args:
-        transaction_id (int):
+        transaction_id (str):
         body (UpdateStatusRequest):
 
     Raises:
@@ -151,7 +151,7 @@ async def asyncio_detailed(
 
 
 async def asyncio(
-    transaction_id: int,
+    transaction_id: str,
     *,
     client: AuthenticatedClient | Client,
     body: UpdateStatusRequest,
@@ -159,7 +159,7 @@ async def asyncio(
     """Update Transaction
 
     Args:
-        transaction_id (int):
+        transaction_id (str):
         body (UpdateStatusRequest):
 
     Raises:

@@ -27,6 +27,7 @@ class UserRead:
         email (str): Primary email address. Example: alice@example.com.
         phone (None | str | Unset): Contact phone number. Example: +1-212-555-0199.
         birth_date (datetime.date | None | Unset): Date of birth (YYYY-MM-DD). Example: 2000-09-01.
+        avatar_url (None | str | Unset): URL to avatar image. Example: https://cdn.neighborhood.com/avatars/alice.png.
         addresses (list[AddressBase] | Unset): Addresses linked to this user (each has a persistent Address ID).
             Example: [{'city': 'New York', 'country': 'USA', 'id': '550e8400-e29b-41d4-a716-446655440000', 'postal_code':
             '10001', 'state': 'NY', 'street': '123 Main St'}].
@@ -39,6 +40,7 @@ class UserRead:
     email: str
     phone: None | str | Unset = UNSET
     birth_date: datetime.date | None | Unset = UNSET
+    avatar_url: None | str | Unset = UNSET
     addresses: list[AddressBase] | Unset = UNSET
     id: UUID | Unset = UNSET
     created_at: datetime.datetime | Unset = UNSET
@@ -63,6 +65,12 @@ class UserRead:
             birth_date = self.birth_date.isoformat()
         else:
             birth_date = self.birth_date
+
+        avatar_url: None | str | Unset
+        if isinstance(self.avatar_url, Unset):
+            avatar_url = UNSET
+        else:
+            avatar_url = self.avatar_url
 
         addresses: list[dict[str, Any]] | Unset = UNSET
         if not isinstance(self.addresses, Unset):
@@ -95,6 +103,8 @@ class UserRead:
             field_dict["phone"] = phone
         if birth_date is not UNSET:
             field_dict["birth_date"] = birth_date
+        if avatar_url is not UNSET:
+            field_dict["avatar_url"] = avatar_url
         if addresses is not UNSET:
             field_dict["addresses"] = addresses
         if id is not UNSET:
@@ -141,6 +151,15 @@ class UserRead:
 
         birth_date = _parse_birth_date(d.pop("birth_date", UNSET))
 
+        def _parse_avatar_url(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        avatar_url = _parse_avatar_url(d.pop("avatar_url", UNSET))
+
         addresses = []
         _addresses = d.pop("addresses", UNSET)
         for addresses_item_data in _addresses or []:
@@ -174,6 +193,7 @@ class UserRead:
             email=email,
             phone=phone,
             birth_date=birth_date,
+            avatar_url=avatar_url,
             addresses=addresses,
             id=id,
             created_at=created_at,

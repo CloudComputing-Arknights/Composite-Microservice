@@ -92,7 +92,7 @@ USER_SERVICE_URL = os.environ.get(
     "USER_SERVICE_URL", "https://users-api-121084561869.us-central1.run.app"
 )
 ITEM_SERVICE_URL = os.environ.get(
-    "ITEM_SERVICE_URL", "https://microservice-item-713181822049.us-central1.run.app"
+    "ITEM_SERVICE_URL", "https://microservice-item-848539791549.us-central1.run.app/"
 )
 TRANSACTION_SERVICE_URL = os.environ.get(
     "TRANSACTION_SERVICE_URL", "http://34.172.7.104:8000"

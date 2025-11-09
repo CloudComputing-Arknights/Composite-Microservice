@@ -2,10 +2,26 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Transaction API",
-    "description": "Am API to manage transactions.",
+    "description": "An API to manage transactions.",
     "version": "1.0.0"
   },
   "paths": {
+    "/ping-db": {
+      "get": {
+        "summary": "Ping Db",
+        "operationId": "ping_db_ping_db_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "summary": "Root",
@@ -26,15 +42,33 @@
       "post": {
         "summary": "Create Transaction",
         "operationId": "create_transaction_transactions_transaction_post",
+        "parameters": [
+          {
+            "name": "X-Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Idempotency-Key"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/NewTransactionRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "201": {
@@ -60,18 +94,18 @@
         }
       }
     },
-    "/transactions/{transactionId}": {
+    "/transactions/{transaction_id}": {
       "get": {
         "summary": "Get Transaction",
-        "operationId": "get_transaction_transactions__transactionId__get",
+        "operationId": "get_transaction_transactions__transaction_id__get",
         "parameters": [
           {
-            "name": "transactionId",
+            "name": "transaction_id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "title": "Transactionid"
+              "type": "string",
+              "title": "Transaction Id"
             }
           }
         ],
@@ -100,15 +134,15 @@
       },
       "put": {
         "summary": "Update Transaction",
-        "operationId": "update_transaction_transactions__transactionId__put",
+        "operationId": "update_transaction_transactions__transaction_id__put",
         "parameters": [
           {
-            "name": "transactionId",
+            "name": "transaction_id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "title": "Transactionid"
+              "type": "string",
+              "title": "Transaction Id"
             }
           }
         ],
@@ -147,15 +181,15 @@
       },
       "delete": {
         "summary": "Delete Transaction",
-        "operationId": "delete_transaction_transactions__transactionId__delete",
+        "operationId": "delete_transaction_transactions__transaction_id__delete",
         "parameters": [
           {
-            "name": "transactionId",
+            "name": "transaction_id",
             "in": "path",
             "required": true,
             "schema": {
-              "type": "integer",
-              "title": "Transactionid"
+              "type": "string",
+              "title": "Transaction Id"
             }
           }
         ],
@@ -197,8 +231,10 @@
                 {
                   "enum": [
                     "pending",
-                    "completed",
-                    "canceled"
+                    "accepted",
+                    "rejected",
+                    "canceled",
+                    "completed"
                   ],
                   "type": "string"
                 },
@@ -210,7 +246,7 @@
             }
           },
           {
-            "name": "initiatorUserId",
+            "name": "initiator_user_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -222,11 +258,11 @@
                   "type": "null"
                 }
               ],
-              "title": "Initiatoruserid"
+              "title": "Initiator User Id"
             }
           },
           {
-            "name": "receiverUserId",
+            "name": "receiver_user_id",
             "in": "query",
             "required": false,
             "schema": {
@@ -238,23 +274,43 @@
                   "type": "null"
                 }
               ],
-              "title": "Receiveruserid"
+              "title": "Receiver User Id"
             }
           },
           {
-            "name": "itemId",
+            "name": "requested_item_id",
             "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "type": "integer"
+                  "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "title": "Itemid"
+              "title": "Requested Item Id"
+            }
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "trade",
+                    "purchase"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
             }
           },
           {
@@ -324,106 +380,210 @@
       },
       "NewTransactionRequest": {
         "properties": {
-          "itemId": {
-            "type": "integer",
-            "title": "Itemid",
-            "description": "The ID of the item being requested by the initiator.",
-            "example": 8
-          },
-          "initiatorUserId": {
+          "requested_item_id": {
             "type": "string",
-            "title": "Initiatoruserid",
-            "description": "The ID of the user who started the transaction.",
-            "example": "4"
+            "title": "Requested Item Id",
+            "description": "UUID of the requested item.",
+            "example": "3f0a6a3c-6f34-4c11-9b3e-58b3b2cc0b9e"
           },
-          "receiverUserId": {
+          "initiator_user_id": {
             "type": "string",
-            "title": "Receiveruserid",
-            "description": "The ID of the user who owns the requested item.",
-            "example": "6"
+            "title": "Initiator User Id",
+            "description": "UUID of the initiator user.",
+            "example": "1b2c3d4e-5f60-7a89-b0c1-d2e3f4a5b6c7"
+          },
+          "receiver_user_id": {
+            "type": "string",
+            "title": "Receiver User Id",
+            "description": "UUID of the receiver user.",
+            "example": "7c6b5a4f-3e2d-1c0b-9a87-6f5e4d3c2b1a"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "trade",
+              "purchase"
+            ],
+            "title": "Type",
+            "description": "Transaction type.",
+            "example": "trade"
+          },
+          "offered_item_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offered Item Id",
+            "description": "Optional offered item UUID when type is trade.",
+            "example": "9eaa9a7c-4e3b-4c9f-8fb0-0ea9722c9b9c"
+          },
+          "offered_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offered Price",
+            "description": "Optional offered price when type is purchase.",
+            "example": 25.5
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Optional initial message.",
+            "example": "Can we meet this weekend?"
           },
           "status": {
             "type": "string",
             "enum": [
               "pending",
-              "completed",
-              "canceled"
+              "accepted",
+              "rejected",
+              "canceled",
+              "completed"
             ],
             "title": "Status",
-            "description": "The current status of the transaction.",
+            "description": "Initial status for the transaction.",
             "default": "pending",
             "example": "pending"
           }
         },
         "type": "object",
         "required": [
-          "itemId",
-          "initiatorUserId",
-          "receiverUserId"
+          "requested_item_id",
+          "initiator_user_id",
+          "receiver_user_id",
+          "type"
         ],
         "title": "NewTransactionRequest"
       },
       "Transaction": {
         "properties": {
-          "transactionId": {
-            "type": "integer",
-            "title": "Transactionid",
-            "description": "The unique identifier for the transaction.",
-            "example": 5
-          },
-          "itemId": {
-            "type": "integer",
-            "title": "Itemid",
-            "description": "The ID of the item being requested by the initiator.",
-            "example": 8
-          },
-          "initiatorUserId": {
+          "transaction_id": {
             "type": "string",
-            "title": "Initiatoruserid",
-            "description": "The ID of the user who started the transaction.",
-            "example": "4"
+            "title": "Transaction Id",
+            "description": "The unique identifier for the transaction (UUID).",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
           },
-          "receiverUserId": {
+          "requested_item_id": {
             "type": "string",
-            "title": "Receiveruserid",
-            "description": "The ID of the user who owns the requested item.",
-            "example": "6"
+            "title": "Requested Item Id",
+            "description": "The UUID of the item being requested by the initiator.",
+            "example": "3f0a6a3c-6f34-4c11-9b3e-58b3b2cc0b9e"
+          },
+          "initiator_user_id": {
+            "type": "string",
+            "title": "Initiator User Id",
+            "description": "The UUID of the user who started the transaction.",
+            "example": "1b2c3d4e-5f60-7a89-b0c1-d2e3f4a5b6c7"
+          },
+          "receiver_user_id": {
+            "type": "string",
+            "title": "Receiver User Id",
+            "description": "The UUID of the user who owns the requested item.",
+            "example": "7c6b5a4f-3e2d-1c0b-9a87-6f5e4d3c2b1a"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "trade",
+              "purchase"
+            ],
+            "title": "Type",
+            "description": "The transaction type.",
+            "example": "trade"
+          },
+          "offered_item_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offered Item Id",
+            "description": "Optional offered item UUID when type is trade.",
+            "example": "9eaa9a7c-4e3b-4c9f-8fb0-0ea9722c9b9c"
+          },
+          "offered_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Offered Price",
+            "description": "Optional offered price when type is purchase.",
+            "example": 25.5
           },
           "status": {
             "type": "string",
             "enum": [
               "pending",
-              "completed",
-              "canceled"
+              "accepted",
+              "rejected",
+              "canceled",
+              "completed"
             ],
             "title": "Status",
             "description": "The current status of the transaction.",
             "example": "pending"
           },
-          "createdAt": {
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message",
+            "description": "Optional message attached to the transaction.",
+            "example": "Can we meet this weekend?"
+          },
+          "created_at": {
             "type": "string",
             "format": "date-time",
-            "title": "Createdat",
+            "title": "Created At",
             "description": "The timestamp when the transaction was created.",
             "example": "2023-01-01T00:00:00"
           },
-          "updatedAt": {
+          "updated_at": {
             "type": "string",
             "format": "date-time",
-            "title": "Updatedat",
+            "title": "Updated At",
             "description": "The timestamp when the transaction was last updated.",
             "example": "2023-01-01T00:00:00"
           }
         },
         "type": "object",
         "required": [
-          "transactionId",
-          "itemId",
-          "initiatorUserId",
-          "receiverUserId",
+          "transaction_id",
+          "requested_item_id",
+          "initiator_user_id",
+          "receiver_user_id",
+          "type",
           "status",
-          "createdAt",
-          "updatedAt"
+          "created_at",
+          "updated_at"
         ],
         "title": "Transaction"
       },
@@ -432,8 +592,10 @@
           "status": {
             "type": "string",
             "enum": [
-              "completed",
-              "canceled"
+              "accepted",
+              "rejected",
+              "canceled",
+              "completed"
             ],
             "title": "Status",
             "description": "New status"
