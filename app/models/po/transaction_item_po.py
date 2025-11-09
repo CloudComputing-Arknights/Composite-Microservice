@@ -3,11 +3,11 @@ from datetime import datetime
 from typing import Optional
 
 
-class AddressUser(SQLModel, table=True):
-    __tablename__ = "address_user"
+class TransactionItem(SQLModel, table=True):
+    __tablename__ = "transaction_item"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    address_id: str = Field(index=True)
-    user_id: str = Field(index=True)
+    transaction_id: str = Field(index=True)
+    item_id: str = Field(index=True)
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)

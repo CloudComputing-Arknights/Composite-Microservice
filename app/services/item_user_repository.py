@@ -8,7 +8,7 @@ from app.models.po.item_user_po import ItemUser
 
 async def create_item_user_relation(
         item_id: str,
-        user_id: int,
+        user_id: str,
         session: AsyncSession
 ) -> ItemUser:
     item_user = ItemUser(item_id=item_id, user_id=user_id)
@@ -27,7 +27,7 @@ async def get_item_owner(item_id: str, session: AsyncSession) -> str:
     return item_user.user_id
 
 
-async def get_user_items(user_id: int, session: AsyncSession) -> List[str]:
+async def get_user_items(user_id: str, session: AsyncSession) -> List[str]:
     statement = select(ItemUser).where(ItemUser.user_id == user_id)
     result = await session.exec(statement)
     item_users = result.all()

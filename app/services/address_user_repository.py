@@ -8,7 +8,7 @@ from app.models.po.address_user_po import AddressUser
 
 async def create_address_user_relation(
         address_id: str,
-        user_id: int,
+        user_id: str,
         session: AsyncSession
 ) -> AddressUser:
     address_user = AddressUser(address_id=address_id, user_id=user_id)
@@ -27,7 +27,7 @@ async def get_address_owner(address_id: str, session: AsyncSession) -> str:
     return address_user.user_id
 
 
-async def get_user_addresses(user_id: int, session: AsyncSession) -> List[str]:
+async def get_user_addresses(user_id: str, session: AsyncSession) -> List[str]:
     statement = select(AddressUser).where(AddressUser.user_id == user_id)
     result = await session.exec(statement)
     address_users = result.all()
