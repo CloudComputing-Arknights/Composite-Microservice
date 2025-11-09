@@ -1,15 +1,15 @@
 from fastapi import HTTPException
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
-from typing import List
 
 from app.models.po.item_user_po import ItemUser
 
+# Item-User: Many-to-One
 
 async def create_item_user_relation(
+        session: AsyncSession,
         item_id: str,
         user_id: str,
-        session: AsyncSession
 ) -> ItemUser:
     item_user = ItemUser(item_id=item_id, user_id=user_id)
     session.add(item_user)
@@ -18,7 +18,10 @@ async def create_item_user_relation(
     return item_user
 
 
-async def get_item_owner(item_id: str, session: AsyncSession) -> str:
+async def get_item_owner(
+        session: AsyncSession,
+        item_id: str,
+) -> str:
     statement = select(ItemUser).where(ItemUser.item_id == item_id)
     result = await session.exec(statement)
     item_user = result.first()
@@ -27,14 +30,20 @@ async def get_item_owner(item_id: str, session: AsyncSession) -> str:
     return item_user.user_id
 
 
-async def get_user_items(user_id: str, session: AsyncSession) -> List[str]:
+async def get_user_items(
+        session: AsyncSession,
+        user_id: str,
+) -> list[str]:
     statement = select(ItemUser).where(ItemUser.user_id == user_id)
     result = await session.exec(statement)
     item_users = result.all()
     return [item_user.item_id for item_user in item_users]
 
 
-async def delete_item_user_relation(item_id: str, session: AsyncSession) -> None:
+async def delete_item_user_relation(
+        session: AsyncSession,
+        item_id: str,
+) -> None:
     statement = select(ItemUser).where(ItemUser.item_id == item_id)
     result = await session.exec(statement)
     item_user = result.first()
@@ -45,9 +54,9 @@ async def delete_item_user_relation(item_id: str, session: AsyncSession) -> None
 
 
 async def verify_item_ownership(
+        session: AsyncSession,
         item_id: str,
         user_id: str,
-        session: AsyncSession
 ) -> bool:
     statement = select(ItemUser).where(
         ItemUser.item_id == item_id,

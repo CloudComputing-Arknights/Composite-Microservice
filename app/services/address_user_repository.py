@@ -1,15 +1,15 @@
 from fastapi import HTTPException
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
-from typing import List
 
 from app.models.po.address_user_po import AddressUser
 
+# Address-User: Many-to-One
 
 async def create_address_user_relation(
+        session: AsyncSession,
         address_id: str,
         user_id: str,
-        session: AsyncSession
 ) -> AddressUser:
     address_user = AddressUser(address_id=address_id, user_id=user_id)
     session.add(address_user)
@@ -18,7 +18,10 @@ async def create_address_user_relation(
     return address_user
 
 
-async def get_address_owner(address_id: str, session: AsyncSession) -> str:
+async def get_address_owner(
+        session: AsyncSession,
+        address_id: str,
+) -> str:
     statement = select(AddressUser).where(AddressUser.address_id == address_id)
     result = await session.exec(statement)
     address_user = result.first()
@@ -27,14 +30,20 @@ async def get_address_owner(address_id: str, session: AsyncSession) -> str:
     return address_user.user_id
 
 
-async def get_user_addresses(user_id: str, session: AsyncSession) -> List[str]:
+async def get_user_addresses(
+        session: AsyncSession,
+        user_id: str,
+) -> list[str]:
     statement = select(AddressUser).where(AddressUser.user_id == user_id)
     result = await session.exec(statement)
     address_users = result.all()
     return [address_user.address_id for address_user in address_users]
 
 
-async def delete_address_user_relation(address_id: str, session: AsyncSession) -> None:
+async def delete_address_user_relation(
+        session: AsyncSession,
+        address_id: str,
+) -> None:
     statement = select(AddressUser).where(AddressUser.address_id == address_id)
     result = await session.exec(statement)
     address_user = result.first()
@@ -45,9 +54,9 @@ async def delete_address_user_relation(address_id: str, session: AsyncSession) -
 
 
 async def verify_address_ownership(
+        session: AsyncSession,
         address_id: str,
         user_id: str,
-        session: AsyncSession
 ) -> bool:
     statement = select(AddressUser).where(
         AddressUser.address_id == address_id,
