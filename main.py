@@ -10,6 +10,12 @@ from fastapi import FastAPI, Request
 from client.item.item_thread_api_client.client import Client as ItemClient
 from client.transaction.transaction_api_client.client import Client as TransactionClient
 from client.user.user_address_api_client.client import Client as UserClient
+from client.user.user_address_api_client.api.default.login_auth_token_post import asyncio as user_login_async
+from client.user.user_address_api_client.models.body_login_auth_token_post import BodyLoginAuthTokenPost
+from client.user.user_address_api_client.models.token import Token
+from client.user.user_address_api_client.models.http_validation_error import HTTPValidationError
+from client.user.user_address_api_client.types import UNSET
+from fastapi import HTTPException
 from models.dto.item_user_dto import CreateOwnItemReq, UpdateOwnItemReq
 from models.dto.user_dto import SignedInUserRes, SignInReq, SignInRes
 from utils.auth import get_user_id_from_token
@@ -68,11 +74,24 @@ async def root():
 
 
 # -----------------------------------------------------------------------------
-# Auth Endpoints
+# Public Endpoints
 # -----------------------------------------------------------------------------
 @app.post("/token", response_model=SignInRes)
 async def sign_in(payload: SignInReq):
-    pass
+    body = BodyLoginAuthTokenPost(username=payload.username, password=payload.password)
+
+    result = await user_login_async(client=_user_client, body=body)
+
+    if result is None:
+        raise HTTPException(status_code=500)
+
+    if isinstance(result, HTTPValidationError):
+        raise HTTPException(status_code=401)
+
+    token: Token = result
+    token_type = token.token_type if token.token_type is not UNSET else "bearer"
+
+    return SignInRes(access_token=token.access_token, token_type=token_type)
 
 
 # -----------------------------------------------------------------------------

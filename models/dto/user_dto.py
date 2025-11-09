@@ -2,11 +2,13 @@ from pydantic import BaseModel
 
 
 class SignInReq(BaseModel):
-    pass
+    username: str
+    password: str
 
 
 class SignInRes(BaseModel):
-    pass
+    access_token: str
+    token_type: str = "bearer"
 
 
 class SignedInUserRes(BaseModel):
