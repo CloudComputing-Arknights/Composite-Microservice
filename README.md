@@ -1,5 +1,11 @@
 # Composite-Microservice
 
+## Microservice Urls
+
+- User Service: https://users-api-121084561869.us-central1.run.app
+- Item Service: https://microservice-item-848539791549.us-central1.run.app
+- Transaction Service: http://34.172.7.104:8000
+
 ## OpenAPI Python Client
 
 ```bash
