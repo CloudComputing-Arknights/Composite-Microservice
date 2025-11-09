@@ -23,6 +23,9 @@ from utils.db_connection import SessionDep, create_db_and_tables, close_db_conne
 
 # Table Models
 from models.po.item_user_po import ItemUser
+from models.po.transaction_user_po import TransactionUser
+from models.po.address_user_po import AddressUser
+from models.po.item_address_po import ItemAddress
 
 # -----------------------------------------------------------------------------
 # Environments and Clients
