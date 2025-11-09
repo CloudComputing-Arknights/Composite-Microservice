@@ -6,13 +6,13 @@ from uuid import UUID
 
 from fastapi import FastAPI, HTTPException, Request, status
 
-import concurrent.futures
+import asyncio
 
 from client.user.user_address_api_client.api.default.get_user_users_user_id_get import (
-    sync as get_user_by_id,
+    asyncio as get_user_by_id_async,
 )
 from client.transaction.transaction_api_client.api.default.list_transactions_transactions_get import (
-    sync as list_transactions,
+    asyncio as list_transactions_async,
 )
 
 # Composite models (Pydantic) used by this API layer
@@ -30,25 +30,25 @@ from models.composite import (
 # Generated API clients
 from client.user.user_address_api_client.client import Client as UserClient
 from client.user.user_address_api_client.api.default.list_users_users_get import (
-    sync as list_users,
+    asyncio as list_users_async,
 )
 from client.user.user_address_api_client.models.user_read import UserRead
 
 from client.item.item_thread_api_client.client import Client as ItemClient
 from client.item.item_thread_api_client.api.items.create_item_items_post import (
-    sync as create_item,
+    asyncio as create_item_async,
 )
 from client.item.item_thread_api_client.api.items.get_item_items_item_id_get import (
-    sync as get_item,
+    asyncio as get_item_async,
 )
 from client.item.item_thread_api_client.api.items.update_item_items_item_id_patch import (
-    sync as update_item,
+    asyncio as update_item_async,
 )
 from client.item.item_thread_api_client.api.items.delete_item_items_item_id_delete import (
-    sync as delete_item,
+    asyncio as delete_item_async,
 )
 from client.item.item_thread_api_client.api.items.list_items_items_get import (
-    sync as list_items,
+    asyncio as list_items_async,
 )
 from client.item.item_thread_api_client.models.item_create import ItemCreate
 from client.item.item_thread_api_client.models.item_update import ItemUpdate
@@ -56,7 +56,7 @@ from client.item.item_thread_api_client.models.item_read import ItemRead
 
 from client.transaction.transaction_api_client.client import Client as TransactionClient
 from client.transaction.transaction_api_client.api.default.create_transaction_transactions_transaction_post import (
-    sync as create_transaction,
+    asyncio as create_transaction_async,
 )
 from client.transaction.transaction_api_client.models.new_transaction_request import (
     NewTransactionRequest,
@@ -81,7 +81,7 @@ app = FastAPI(
 # Root Endpoint
 # -----------------------------------------------------------------------------
 @app.get("/")
-def root():
+async def root():
     return {"message": "Welcome to the Composite API. See /docs for details."}
 
 
@@ -92,7 +92,7 @@ USER_SERVICE_URL = os.environ.get(
     "USER_SERVICE_URL", "https://users-api-121084561869.us-central1.run.app"
 )
 ITEM_SERVICE_URL = os.environ.get(
-    "ITEM_SERVICE_URL", "https://microservice-item-848539791549.us-central1.run.app/"
+    "ITEM_SERVICE_URL", "https://microservice-item-848539791549.us-central1.run.app"
 )
 TRANSACTION_SERVICE_URL = os.environ.get(
     "TRANSACTION_SERVICE_URL", "http://34.172.7.104:8000"
@@ -119,10 +119,10 @@ def get_current_username(request: Request) -> Optional[str]:
     return username or None
 
 
-def _resolve_user_uuid_by_username(username: str) -> Optional[UUID]:
+async def _resolve_user_uuid_by_username(username: str) -> Optional[UUID]:
     """Lookup the user's UUID in the User service by username."""
     try:
-        users = list_users(client=_user_client, username=username)
+        users = await list_users_async(client=_user_client, username=username)
         if isinstance(users, list) and users:
             first: UserRead = users[0]
             # attrs class exposes `id` attribute (UUID)
@@ -137,7 +137,7 @@ def _resolve_user_uuid_by_username(username: str) -> Optional[UUID]:
 # Auth Endpoints (placeholders)
 # -----------------------------------------------------------------------------
 @app.post("/auth/login", response_model=LoginResponse)
-def auth_login(payload: LoginRequest):
+async def auth_login(payload: LoginRequest):
     # Placeholder only. No real authentication is performed here.
     return LoginResponse(
         message=(
@@ -148,18 +148,18 @@ def auth_login(payload: LoginRequest):
 
 
 @app.post("/auth/logout", response_model=LoginResponse)
-def auth_logout():
+async def auth_logout():
     # Placeholder only. Instruct clients to drop any local tokens/cookies they use for simulation.
     return LoginResponse(message="Logout not implemented. Remove X-Debug-Username header to simulate logout.")
 
 
 @app.get("/auth/me", response_model=CurrentUser)
-def auth_me(request: Request):
+async def auth_me(request: Request):
     username = get_current_username(request)
     if not username:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not logged in (placeholder)")
 
-    user_uuid = _resolve_user_uuid_by_username(username)
+    user_uuid = await _resolve_user_uuid_by_username(username)
     return CurrentUser(username=username, user_id=user_uuid)
 
 
@@ -167,7 +167,7 @@ def auth_me(request: Request):
 # Endpoints for the logged-in user
 # -----------------------------------------------------------------------------
 @app.post("/me/items")
-def create_item_for_me(payload: CreateOwnItemRequest, request: Request):
+async def create_item_for_me(payload: CreateOwnItemRequest, request: Request):
     """Create an item owned by the currently logged-in user.
 
     Note: Ownership is enforced server-side using the resolved user UUID; the request
@@ -177,7 +177,7 @@ def create_item_for_me(payload: CreateOwnItemRequest, request: Request):
     if not username:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not logged in (placeholder)")
 
-    user_uuid = _resolve_user_uuid_by_username(username)
+    user_uuid = await _resolve_user_uuid_by_username(username)
     if not user_uuid:
         raise HTTPException(status_code=400, detail="Could not resolve current user in User service")
 
@@ -192,7 +192,7 @@ def create_item_for_me(payload: CreateOwnItemRequest, request: Request):
         image_urls=payload.image_urls or [],
         user_uuid=user_uuid,
     )
-    created = create_item(client=_item_client, body=body)
+    created = await create_item_async(client=_item_client, body=body)
     if created is None:
         raise HTTPException(status_code=502, detail="Item service did not return a response")
     if hasattr(created, "to_dict"):
@@ -201,7 +201,7 @@ def create_item_for_me(payload: CreateOwnItemRequest, request: Request):
 
 
 @app.get("/me/items")
-def list_my_items(request: Request, skip: int = 0, limit: int = 10):
+async def list_my_items(request: Request, skip: int = 0, limit: int = 10):
     """List items belonging to the current user.
 
     TODO: The Item service currently does not expose a filter by user. This implementation
@@ -211,11 +211,11 @@ def list_my_items(request: Request, skip: int = 0, limit: int = 10):
     if not username:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not logged in (placeholder)")
 
-    user_uuid = _resolve_user_uuid_by_username(username)
+    user_uuid = await _resolve_user_uuid_by_username(username)
     if not user_uuid:
         raise HTTPException(status_code=400, detail="Could not resolve current user in User service")
 
-    items = list_items(client=_item_client, skip=skip, limit=limit)
+    items = await list_items_async(client=_item_client, skip=skip, limit=limit)
     if not isinstance(items, list):
         return []
 
@@ -225,17 +225,17 @@ def list_my_items(request: Request, skip: int = 0, limit: int = 10):
 
 
 @app.patch("/me/items/{item_id}")
-def update_my_item(item_id: UUID, payload: UpdateOwnItemRequest, request: Request):
+async def update_my_item(item_id: UUID, payload: UpdateOwnItemRequest, request: Request):
     username = get_current_username(request)
     if not username:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not logged in (placeholder)")
 
-    user_uuid = _resolve_user_uuid_by_username(username)
+    user_uuid = await _resolve_user_uuid_by_username(username)
     if not user_uuid:
         raise HTTPException(status_code=400, detail="Could not resolve current user in User service")
 
     # Ensure ownership (placeholder enforcement via Item service lookup)
-    existing = get_item(client=_item_client, item_id=item_id)
+    existing = await get_item_async(client=_item_client, item_id=item_id)
     if existing is None:
         raise HTTPException(status_code=404, detail="Item not found")
     owner_uuid = getattr(existing, "user_uuid", None)
@@ -252,36 +252,36 @@ def update_my_item(item_id: UUID, payload: UpdateOwnItemRequest, request: Reques
         location=payload.location if payload.location is not None else None,
         image_urls=payload.image_urls if payload.image_urls is not None else None,
     )
-    updated = update_item(client=_item_client, item_id=item_id, body=body)
+    updated = await update_item_async(client=_item_client, item_id=item_id, body=body)
     if updated is None:
         raise HTTPException(status_code=502, detail="Item service did not return a response")
     return updated.to_dict() if hasattr(updated, "to_dict") else updated
 
 
 @app.delete("/me/items/{item_id}")
-def delete_my_item(item_id: UUID, request: Request):
+async def delete_my_item(item_id: UUID, request: Request):
     username = get_current_username(request)
     if not username:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not logged in (placeholder)")
 
-    user_uuid = _resolve_user_uuid_by_username(username)
+    user_uuid = await _resolve_user_uuid_by_username(username)
     if not user_uuid:
         raise HTTPException(status_code=400, detail="Could not resolve current user in User service")
 
-    existing = get_item(client=_item_client, item_id=item_id)
+    existing = await get_item_async(client=_item_client, item_id=item_id)
     if existing is None:
         raise HTTPException(status_code=404, detail="Item not found")
     owner_uuid = getattr(existing, "user_uuid", None)
     if not owner_uuid or owner_uuid != user_uuid:
         raise HTTPException(status_code=403, detail="Cannot delete an item you do not own")
 
-    deleted = delete_item(client=_item_client, item_id=item_id)
+    deleted = await delete_item_async(client=_item_client, item_id=item_id)
     # Item service delete may return validation error or nothing; respond with placeholder message
     return {"message": "Item delete requested", "item_id": str(item_id)}
 
 
 @app.post("/me/transactions")
-def create_transaction_for_me(payload: TransactionInitRequest, request: Request):
+async def create_transaction_for_me(payload: TransactionInitRequest, request: Request):
     """Start a transaction as the current user (placeholder).
 
     Note: Transaction service uses integer item IDs and string user IDs; this endpoint
@@ -296,7 +296,7 @@ def create_transaction_for_me(payload: TransactionInitRequest, request: Request)
         initiator_user_id=username,
         receiver_user_id=payload.receiver_user_id,
     )
-    tx = create_transaction(client=_transaction_client, body=body)
+    tx = await create_transaction_async(client=_transaction_client, body=body)
     if tx is None:
         raise HTTPException(status_code=502, detail="Transaction service did not return a response")
     return tx.to_dict() if hasattr(tx, "to_dict") else tx
@@ -307,7 +307,7 @@ def create_transaction_for_me(payload: TransactionInitRequest, request: Request)
 # -----------------------------------------------------------------------------
 
 @app.get("/items", response_model=List[EnrichedPost])
-def get_all_available_items(skip: int = 0, limit: int = 20):
+async def get_all_available_items(skip: int = 0, limit: int = 20):
     """
     (New) Browse all available items (public).
     
@@ -318,7 +318,7 @@ def get_all_available_items(skip: int = 0, limit: int = 20):
     
     # 1. Get the list of items (This is a blocking I/O call)
     try:
-        items = list_items(client=_item_client, skip=skip, limit=limit)
+        items = await list_items_async(client=_item_client, skip=skip, limit=limit)
         if not isinstance(items, list):
             return []
     except Exception as e:
@@ -332,27 +332,23 @@ def get_all_available_items(skip: int = 0, limit: int = 20):
         # No users to enrich, return early (or return un-enriched items)
         return []
 
-    # 3. (New) Use a ThreadPoolExecutor to fetch user info in parallel
-    # [Fulfills requirement: "use threads for parallel execution"]
+    # 3. Fetch user info concurrently using asyncio.gather
     users_map: Dict[UUID, UserRead] = {}
-    
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        # Create a dict mapping futures to user_uuids to retrieve results
-        future_to_uuid = {
-            executor.submit(get_user_by_id, client=_user_client, user_id=uuid): uuid
-            for uuid in user_uuids_to_fetch
-        }
-        
-        # Wait for threads to complete
-        for future in concurrent.futures.as_completed(future_to_uuid):
-            user_uuid = future_to_uuid[future]
-            try:
-                user_data = future.result() # Get the thread's return value
-                if user_data and isinstance(user_data, UserRead):
-                    users_map[user_uuid] = user_data
-            except Exception as e:
-                # Don't fail the entire request if one user lookup fails
-                print(f"Failed to fetch user {user_uuid} for enrichment: {e}")
+    uuids_list = list(user_uuids_to_fetch)
+    try:
+        results = await asyncio.gather(
+            *(get_user_by_id_async(client=_user_client, user_id=u) for u in uuids_list),
+            return_exceptions=True,
+        )
+        for u, res in zip(uuids_list, results):
+            if isinstance(res, Exception):
+                # Skip failed fetches but continue enriching others
+                continue
+            if res and isinstance(res, UserRead):
+                users_map[u] = res
+    except Exception as e:
+        # In case gather itself fails, proceed with what we have (empty map)
+        pass
 
     # 4. Enrich the results
     enriched_posts = []
@@ -393,7 +389,7 @@ def get_all_available_items(skip: int = 0, limit: int = 20):
 # -----------------------------------------------------------------------------
 
 @app.get("/me/transactions")
-def get_my_transaction_history(request: Request):
+async def get_my_transaction_history(request: Request):
     """
     (New) View "my" transaction history.
     
@@ -409,10 +405,10 @@ def get_my_transaction_history(request: Request):
     # 1. We can fetch the raw transactions
     try:
         # (Assumes 'username' is the user_id in the transaction service)
-        tx_as_initiator = list_transactions(
+        tx_as_initiator = await list_transactions_async(
             client=_transaction_client, initiator_user_id=username
         )
-        tx_as_receiver = list_transactions(
+        tx_as_receiver = await list_transactions_async(
             client=_transaction_client, receiver_user_id=username
         )
     except Exception as e:
@@ -438,7 +434,7 @@ def get_my_transaction_history(request: Request):
 # -----------------------------------------------------------------------------
 
 @app.get("/admin/monitor/user/{user_uuid}")
-def admin_monitor_user(user_uuid: UUID, request: Request):
+async def admin_monitor_user(user_uuid: UUID, request: Request):
     """
     (New) Monitor a specific user's activity (placeholder).
     
@@ -463,7 +459,7 @@ def admin_monitor_user(user_uuid: UUID, request: Request):
     )
 
 @app.post("/admin/remove/content")
-def admin_remove_content(request: Request):
+async def admin_remove_content(request: Request):
     """
     (New) Remove inappropriate content (placeholder).
     
