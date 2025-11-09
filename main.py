@@ -4,7 +4,7 @@ import os
 from typing import Optional, List, Dict
 from uuid import UUID
 
-from fastapi import FastAPI, HTTPException, Request, status, JSONResponse
+from fastapi import FastAPI, HTTPException, Request, status
 
 import concurrent.futures
 
@@ -430,14 +430,7 @@ def get_my_transaction_history(request: Request):
     # This is what the professor's PPT refers to: we need a DBaaS
     # with an "Associative Entity" (mapping table) to link them.
     
-    return JSONResponse(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        content={
-            "message": "Cannot enrich transaction history in stateless mode.",
-            "detail": "This endpoint requires the Composite Service's DBaaS to resolve the 'logical foreign key' between Transaction (itemId: int) and Item (item_UUID: UUID).",
-            "raw_transactions": [tx.to_dict() for tx in all_txs_raw if hasattr(tx, "to_dict")]
-        }
-    )
+    return None
 
 
 # -----------------------------------------------------------------------------
