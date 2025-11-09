@@ -1,5 +1,11 @@
 # Composite-Microservice
 
+## Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Microservice Urls
 
 - User Service: https://users-api-121084561869.us-central1.run.app
