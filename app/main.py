@@ -22,6 +22,11 @@ from app.utils.auth import get_user_id_from_token
 from app.utils.db_connection import SessionDep, create_db_and_tables, close_db_connection
 
 # Table Models
+from models.po.item_user_po import ItemUser
+from models.po.transaction_item_po import TransactionItem
+from models.po.transaction_user_po import TransactionUser
+from models.po.address_user_po import AddressUser
+from models.po.item_address_po import ItemAddress
 
 # -----------------------------------------------------------------------------
 # Environments and Clients
