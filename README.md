@@ -15,9 +15,9 @@ pip install -r requirements.txt
 ## OpenAPI Python Client
 
 ```bash
-openapi-python-client generate --path ./app/client/openapi-item.json --output-path ./app/client/item
-openapi-python-client generate --path ./app/client/openapi-transaction.json --output-path ./app/client/transaction
-openapi-python-client generate --path ./app/client/openapi-user.json --output-path ./app/client/user
+openapi-python-client generate --path ./openapi/openapi-item.json --output-path ./app/client/item
+openapi-python-client generate --path ./openapi/openapi-transaction.json --output-path ./app/client/transaction
+openapi-python-client generate --path ./openapi/openapi-user.json --output-path ./app/client/user
 ```
 
 ## Google Cloud Artifact Registry
