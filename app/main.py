@@ -12,8 +12,7 @@ from app.utils.db_connection import create_db_and_tables, close_db_connection
 
 # Table Models (Necessary)
 from app.models.po.item_user_po import ItemUser
-from app.models.po.transaction_item_po import TransactionItem
-from app.models.po.transaction_user_po import TransactionUser
+from app.models.po.transaction_user_item_po import TransactionUserItem
 from app.models.po.address_user_po import AddressUser
 from app.models.po.item_address_po import ItemAddress
 

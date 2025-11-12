@@ -4,17 +4,18 @@ from typing import Optional
 from enum import Enum
 
 
-class ItemRole(str, Enum):
-    REQUESTED = "requested"
-    OFFERED = "offered"
+class Role(str, Enum):
+    REQUESTED = "initiator"
+    OFFERED = "receiver"
 
 
-class TransactionItem(SQLModel, table=True):
-    __tablename__ = "transaction_item"
+class TransactionUserItem(SQLModel, table=True):
+    __tablename__ = "transaction_user_item"
 
     id: Optional[int] = Field(default=None, primary_key=True)
     transaction_id: str = Field(index=True)
+    user_id: str = Field(index=True)
     item_id: str = Field(index=True)
-    item_role: ItemRole = Field(index=True)
+    role: Role = Field(index=True)
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
