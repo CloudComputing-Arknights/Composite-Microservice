@@ -5,8 +5,8 @@ from enum import Enum
 
 
 class Role(str, Enum):
-    REQUESTED = "initiator"
-    OFFERED = "receiver"
+    Initiator = "initiator"
+    Receiver = "receiver"
 
 
 class TransactionUserItem(SQLModel, table=True):
@@ -15,7 +15,7 @@ class TransactionUserItem(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     transaction_id: str = Field(index=True)
     user_id: str = Field(index=True)
-    item_id: str = Field(index=True)
+    item_id: Optional[str] = Field(index=True)
     role: Role = Field(index=True)
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
