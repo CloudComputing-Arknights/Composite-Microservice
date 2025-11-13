@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Request
 
 from app.models.dto.item_user_dto import CreateOwnItemReq, UpdateOwnItemReq
-from app.models.dto.user_dto import SignedInUserRes
 from app.utils.auth import get_user_id_from_token
 from app.utils.db_connection import SessionDep
 
