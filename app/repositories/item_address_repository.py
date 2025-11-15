@@ -40,6 +40,7 @@ async def get_address_items(
     return [item_address.item_id for item_address in item_addresses]
 
 
+
 async def delete_item_address_relation(
         session: AsyncSession,
         item_id: str,

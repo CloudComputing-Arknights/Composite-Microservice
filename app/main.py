@@ -14,8 +14,10 @@ from app.resources.transaction_router import transaction_router
 from app.resources.transaction_user_item_router import transaction_user_item_router
 from app.resources.user_router import user_router
 
+
 from app.utils.config import init_env
 from app.utils.db_connection import create_db_and_tables, close_db_connection
+from fastapi.openapi.utils import get_openapi
 
 # Table Models (Necessary)
 from app.models.po.address_user_po import AddressUser
@@ -70,3 +72,29 @@ app.include_router(root_router)
 app.include_router(transaction_router)
 app.include_router(transaction_user_item_router)
 app.include_router(user_router)
+
+
+# -----------------------------------------------------------------------------
+# Authorizwation in OpenAPI
+# -----------------------------------------------------------------------------
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="Composite API",
+        version="1.0.0",
+        description="An API to orchestrate calls to other microservices.",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT"
+        }
+    }
+    openapi_schema["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi

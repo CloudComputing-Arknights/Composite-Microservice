@@ -43,8 +43,12 @@ async def get_user_items(
 async def delete_item_user_relation(
         session: AsyncSession,
         item_id: str,
+        user_id: str,
 ) -> None:
-    statement = select(ItemUser).where(ItemUser.item_id == item_id)
+    statement = select(ItemUser).where(
+        ItemUser.item_id == item_id,
+        ItemUser.user_id == user_id
+    )
     result = await session.exec(statement)
     item_user = result.first()
     if not item_user:
