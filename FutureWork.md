@@ -75,27 +75,50 @@ Unify and simplify:
 ---
 
 ## 🛠 Final Composite Microservice Structure (After Migration)
- Client sends HTTP request
-    ↓
- API Router (resources/*_router.py)
-      - Parses URL path, query parameters, body
-      - Uses DTO for request validation
-    ↓
- Service Layer (services/*_service.py)
-      - Implements business rules
-      - May call external microservices (client/*)
-      - Transforms DTOs into persistent PO objects
-    ↓
- Repository Layer (repositories/*_repository.py)
-      - Handles CRUD operations with ORM (PO models)
-      - Encapsulates SQL queries and persistence logic
-    ↓
- Database Models (models/po/*.py)
-      - ORM tables mapping for SQLModel/SQLAlchemy
-    ↓
- Database (MySQL/PostgreSQL)
+## 🗂 Composite Microservice Architecture
 
+```plaintext
++----------------------------+
+|        Client (HTTP)       |
++----------------------------+
+              |
+              v
++----------------------------+
+| API Router (resources/)    |
+| - Defines endpoints        |
+| - Parses params & body     |
+| - Uses DTO for validation  |
++----------------------------+
+              |
+              v
++----------------------------+
+| Service Layer (services/)  |
+| - Business logic           |
+| - Calls external services  |
+| - Transforms DTO to PO     |
++----------------------------+
+              |
+              v
++----------------------------+
+| Repository Layer           |
+| (repositories/)            |
+| - CRUD operations          |
+| - Uses PO ORM models       |
++----------------------------+
+              |
+              v
++----------------------------+
+| Persistent Objects (PO)    |
+| (models/po/)               |
+| - ORM table mappings       |
++----------------------------+
+              |
+              v
++----------------------------+
+| Database (MySQL/PostgreSQL)|
++----------------------------+
 
+```
 ---
 
 ## 📂 Data Model Roles
@@ -115,28 +138,4 @@ Unify and simplify:
 2. **Consistency** — One place for API models, one for DB models.
 3. **Maintainability** — Database changes require minimal impact to API layers.
 4. **Extensibility** — Adding new entity = DTO + PO + repository + service + router.
-
----
-
-## 🚀 How to Run Locally
-
-```bash
-# 1. Clone repository
-git clone <repo-url>
-cd Composite-Microservice
-
-# 2. Create and activate virtual environment
-python -m venv venv
-source venv/bin/activate   # For Mac/Linux
-venv\Scripts\activate      # For Windows
-
-# 3. Install dependencies
-pip install -r requirements.txt
-
-# 4. Start server
-uvicorn app.main:app --reload
-
-# 5. Access API documentation
-# Open browser and go to:
-http://127.0.0.1:8000/docs
 
