@@ -75,7 +75,25 @@ Unify and simplify:
 ---
 
 ## 🛠 Final Composite Microservice Structure (After Migration)
-
+ Client sends HTTP request
+    ↓
+ API Router (resources/*_router.py)
+      - Parses URL path, query parameters, body
+      - Uses DTO for request validation
+    ↓
+ Service Layer (services/*_service.py)
+      - Implements business rules
+      - May call external microservices (client/*)
+      - Transforms DTOs into persistent PO objects
+    ↓
+ Repository Layer (repositories/*_repository.py)
+      - Handles CRUD operations with ORM (PO models)
+      - Encapsulates SQL queries and persistence logic
+    ↓
+ Database Models (models/po/*.py)
+      - ORM tables mapping for SQLModel/SQLAlchemy
+    ↓
+ Database (MySQL/PostgreSQL)
 
 
 ---
