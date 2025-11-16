@@ -11,33 +11,59 @@ The service can interact with external microservices for validation and business
 
 ## ✅ Current Implemented Endpoints
 
-### **Item Service**
-- `POST /items` – Create an item  
-- `GET /items/{item_id}` – Retrieve item details by ID  
+### **Addresses**
+- `GET /addresses` – List all addresses  
+- `POST /addresses` – Create a new address  
+- `GET /addresses/{address_id}` – Get address by ID  
+- `PATCH /addresses/{address_id}` – Update an address  
+- `DELETE /addresses/{address_id}` – Delete an address  
+
+### **Address-User**
+- `POST /address-user/{address_id}/{user_id}` – Create binding between address and user  
+- `GET /address-user/user/{user_id}` – List all addresses belonging to a specific user  
+- `GET /address-user/address/{address_id}` – Get the owner (user) of a given address  
+- `DELETE /address-user/{address_id}/{user_id}` – Delete binding between address and user
+
+### **Item-Address**
+- `POST /item-address/{item_id}/{address_id}` – Create binding between item and address  
+- `DELETE /item-address/{item_id}/{address_id}` – Delete binding between item and address  
+- `GET /item-address/address/{address_id}` – List all items located at a specific address  
+- `GET /item-address/item/{item_id}` – Get address location of a specific item  
+
+### **Items**
 - `GET /items` – List all items  
-- `PUT /items/{item_id}` – Update an item  
-- `DELETE /items/{item_id}` – Delete an item
+- `POST /items` – Create a new item  
+- `GET /items/{item_id}` – Get item by ID  
+- `PATCH /items/{item_id}` – Update item  
+- `DELETE /items/{item_id}` – Delete item  
 
-### **User Service**
-- `POST /users` – Create a user  
-- `GET /users/{user_id}` – Retrieve user details by ID  
-- `GET /users` – List all users  
-- `PUT /users/{user_id}` – Update a user  
-- `DELETE /users/{user_id}` – Delete a user
+### **Item-User**
+- `POST /item-user/{item_id}/{user_id}` – Create binding between item and user  
+- `GET /item-user/user/{user_id}` – List all items belonging to a specific user  
+- `GET /item-user/item/{item_id}` – Get the owner (user) of a given item  
+- `DELETE /item-user/{item_id}/{user_id}` – Delete binding between item and user  
 
-### **Item-User Relationship Service**
-- `POST /item-user` – Create an item-user binding  
-- `GET /item-user/{user_id}` – List all items for a user  
-- `GET /item-user/owner/{item_id}` – Find the owner of an item  
-- `DELETE /item-user/{item_id}?user_id=X` – Remove an item-user binding  
-- *(Optional)* `GET /item-user/verify/{item_id}?user_id=X` – Verify item ownership
+### **Default (Generic / Auth)**
+- `GET /` – Root welcome endpoint  
+- `POST /token/sign-in` – Sign-in endpoint (returns auth token)  
+- `GET /me/user` – Get authenticated user info  
 
-### **Transaction Service**
-- `POST /transactions` – Create a transaction  
-- `GET /transactions/{transaction_id}` – Retrieve transaction details  
+### **Transactions**
 - `GET /transactions` – List all transactions  
-- `PUT /transactions/{transaction_id}` – Update a transaction  
-- `DELETE /transactions/{transaction_id}` – Delete a transaction
+- `POST /transactions` – Create a transaction  
+- `GET /transactions/{transaction_id}` – Get transaction by ID  
+- `PATCH /transactions/{transaction_id}` – Update transaction  
+- `DELETE /transactions/{transaction_id}` – Delete transaction  
+
+### **Transaction-User-Item**
+- `POST /transaction-user-item/{transaction_id}/{user_id}` – Create binding between transaction and user-item  
+- `DELETE /transaction-user-item/{transaction_id}/{user_id}` – Delete binding between transaction and user-item  
+- `GET /transaction-user-item` – List all transaction-user-item relations
+
+<img width="2304" height="1542" alt="image" src="https://github.com/user-attachments/assets/4bf2fa23-a422-4c26-b42f-ba100c6361f4" />
+<img width="2288" height="1820" alt="image" src="https://github.com/user-attachments/assets/7acbaa74-3188-436d-9fcd-209c1dd01b69" />
+<img width="2296" height="1626" alt="image" src="https://github.com/user-attachments/assets/02ae52c5-7484-4d13-b53f-d87bd9aed0d5" />
+
 
 ---
 
