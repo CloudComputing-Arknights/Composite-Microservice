@@ -17,9 +17,6 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     status_param: ListTransactionsTransactionsGetStatusParamType0 | None | Unset = UNSET,
-    initiator_user_id: None | str | Unset = UNSET,
-    receiver_user_id: None | str | Unset = UNSET,
-    requested_item_id: None | str | Unset = UNSET,
     type_: ListTransactionsTransactionsGetTypeType0 | None | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
@@ -34,27 +31,6 @@ def _get_kwargs(
     else:
         json_status_param = status_param
     params["status_param"] = json_status_param
-
-    json_initiator_user_id: None | str | Unset
-    if isinstance(initiator_user_id, Unset):
-        json_initiator_user_id = UNSET
-    else:
-        json_initiator_user_id = initiator_user_id
-    params["initiator_user_id"] = json_initiator_user_id
-
-    json_receiver_user_id: None | str | Unset
-    if isinstance(receiver_user_id, Unset):
-        json_receiver_user_id = UNSET
-    else:
-        json_receiver_user_id = receiver_user_id
-    params["receiver_user_id"] = json_receiver_user_id
-
-    json_requested_item_id: None | str | Unset
-    if isinstance(requested_item_id, Unset):
-        json_requested_item_id = UNSET
-    else:
-        json_requested_item_id = requested_item_id
-    params["requested_item_id"] = json_requested_item_id
 
     json_type_: None | str | Unset
     if isinstance(type_, Unset):
@@ -119,9 +95,6 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     status_param: ListTransactionsTransactionsGetStatusParamType0 | None | Unset = UNSET,
-    initiator_user_id: None | str | Unset = UNSET,
-    receiver_user_id: None | str | Unset = UNSET,
-    requested_item_id: None | str | Unset = UNSET,
     type_: ListTransactionsTransactionsGetTypeType0 | None | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
@@ -130,9 +103,6 @@ def sync_detailed(
 
     Args:
         status_param (ListTransactionsTransactionsGetStatusParamType0 | None | Unset):
-        initiator_user_id (None | str | Unset):
-        receiver_user_id (None | str | Unset):
-        requested_item_id (None | str | Unset):
         type_ (ListTransactionsTransactionsGetTypeType0 | None | Unset):
         limit (int | Unset):  Default: 50.
         offset (int | Unset):  Default: 0.
@@ -147,9 +117,6 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         status_param=status_param,
-        initiator_user_id=initiator_user_id,
-        receiver_user_id=receiver_user_id,
-        requested_item_id=requested_item_id,
         type_=type_,
         limit=limit,
         offset=offset,
@@ -166,9 +133,6 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     status_param: ListTransactionsTransactionsGetStatusParamType0 | None | Unset = UNSET,
-    initiator_user_id: None | str | Unset = UNSET,
-    receiver_user_id: None | str | Unset = UNSET,
-    requested_item_id: None | str | Unset = UNSET,
     type_: ListTransactionsTransactionsGetTypeType0 | None | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
@@ -177,9 +141,6 @@ def sync(
 
     Args:
         status_param (ListTransactionsTransactionsGetStatusParamType0 | None | Unset):
-        initiator_user_id (None | str | Unset):
-        receiver_user_id (None | str | Unset):
-        requested_item_id (None | str | Unset):
         type_ (ListTransactionsTransactionsGetTypeType0 | None | Unset):
         limit (int | Unset):  Default: 50.
         offset (int | Unset):  Default: 0.
@@ -195,9 +156,6 @@ def sync(
     return sync_detailed(
         client=client,
         status_param=status_param,
-        initiator_user_id=initiator_user_id,
-        receiver_user_id=receiver_user_id,
-        requested_item_id=requested_item_id,
         type_=type_,
         limit=limit,
         offset=offset,
@@ -208,9 +166,6 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     status_param: ListTransactionsTransactionsGetStatusParamType0 | None | Unset = UNSET,
-    initiator_user_id: None | str | Unset = UNSET,
-    receiver_user_id: None | str | Unset = UNSET,
-    requested_item_id: None | str | Unset = UNSET,
     type_: ListTransactionsTransactionsGetTypeType0 | None | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
@@ -219,9 +174,6 @@ async def asyncio_detailed(
 
     Args:
         status_param (ListTransactionsTransactionsGetStatusParamType0 | None | Unset):
-        initiator_user_id (None | str | Unset):
-        receiver_user_id (None | str | Unset):
-        requested_item_id (None | str | Unset):
         type_ (ListTransactionsTransactionsGetTypeType0 | None | Unset):
         limit (int | Unset):  Default: 50.
         offset (int | Unset):  Default: 0.
@@ -236,9 +188,6 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         status_param=status_param,
-        initiator_user_id=initiator_user_id,
-        receiver_user_id=receiver_user_id,
-        requested_item_id=requested_item_id,
         type_=type_,
         limit=limit,
         offset=offset,
@@ -253,9 +202,6 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     status_param: ListTransactionsTransactionsGetStatusParamType0 | None | Unset = UNSET,
-    initiator_user_id: None | str | Unset = UNSET,
-    receiver_user_id: None | str | Unset = UNSET,
-    requested_item_id: None | str | Unset = UNSET,
     type_: ListTransactionsTransactionsGetTypeType0 | None | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
@@ -264,9 +210,6 @@ async def asyncio(
 
     Args:
         status_param (ListTransactionsTransactionsGetStatusParamType0 | None | Unset):
-        initiator_user_id (None | str | Unset):
-        receiver_user_id (None | str | Unset):
-        requested_item_id (None | str | Unset):
         type_ (ListTransactionsTransactionsGetTypeType0 | None | Unset):
         limit (int | Unset):  Default: 50.
         offset (int | Unset):  Default: 0.
@@ -283,9 +226,6 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             status_param=status_param,
-            initiator_user_id=initiator_user_id,
-            receiver_user_id=receiver_user_id,
-            requested_item_id=requested_item_id,
             type_=type_,
             limit=limit,
             offset=offset,
