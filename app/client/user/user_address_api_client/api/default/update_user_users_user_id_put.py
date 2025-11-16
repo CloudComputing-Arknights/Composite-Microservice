@@ -40,6 +40,9 @@ def _parse_response(
 
         return response_200
 
+    if response.status_code == 404 or response.status_code == 400:
+        return None
+
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
 

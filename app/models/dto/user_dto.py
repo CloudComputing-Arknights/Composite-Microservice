@@ -1,4 +1,10 @@
-from pydantic import BaseModel
+from datetime import date, datetime
+from uuid import UUID
+from typing import Optional, List
+
+from pydantic import BaseModel, Field
+
+from .address_dto import AddressDTO
 
 
 class SignInReq(BaseModel):
@@ -11,5 +17,19 @@ class SignInRes(BaseModel):
     token_type: str = "bearer"
 
 
-class SignedInUserRes(BaseModel):
+class UserDTO(BaseModel):
+    id: UUID
+    username: str
+    email: str
+
+    phone: Optional[str] = None
+    birth_date: Optional[date] = None
+    avatar_url: Optional[str] = None
+
+    addresses: List[AddressDTO] = Field(default_factory=list)
+
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+class SignedInUserRes(UserDTO):
     pass

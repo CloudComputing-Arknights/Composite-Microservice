@@ -24,9 +24,8 @@ def _get_kwargs(
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
 ) -> Any | HTTPValidationError | None:
-    if response.status_code == 204:
-        response_204 = cast(Any, None)
-        return response_204
+    if response.status_code == 204 or response.status_code == 404:
+        return None
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())

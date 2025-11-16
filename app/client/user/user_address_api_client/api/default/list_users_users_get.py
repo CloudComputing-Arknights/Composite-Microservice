@@ -14,8 +14,6 @@ def _get_kwargs(
     username: None | str | Unset = UNSET,
     email: None | str | Unset = UNSET,
     phone: None | str | Unset = UNSET,
-    city: None | str | Unset = UNSET,
-    country: None | str | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
 ) -> dict[str, Any]:
@@ -41,20 +39,6 @@ def _get_kwargs(
     else:
         json_phone = phone
     params["phone"] = json_phone
-
-    json_city: None | str | Unset
-    if isinstance(city, Unset):
-        json_city = UNSET
-    else:
-        json_city = city
-    params["city"] = json_city
-
-    json_country: None | str | Unset
-    if isinstance(country, Unset):
-        json_country = UNSET
-    else:
-        json_country = country
-    params["country"] = json_country
 
     params["limit"] = limit
 
@@ -106,8 +90,6 @@ def sync_detailed(
     username: None | str | Unset = UNSET,
     email: None | str | Unset = UNSET,
     phone: None | str | Unset = UNSET,
-    city: None | str | Unset = UNSET,
-    country: None | str | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
 ) -> Response[Any | HTTPValidationError]:
@@ -117,8 +99,6 @@ def sync_detailed(
         username (None | str | Unset): Filter by username
         email (None | str | Unset): Filter by email
         phone (None | str | Unset): Filter by phone number
-        city (None | str | Unset): Filter by city of at least one address
-        country (None | str | Unset): Filter by country of at least one address
         limit (int | Unset):  Default: 50.
         offset (int | Unset):  Default: 0.
 
@@ -134,8 +114,6 @@ def sync_detailed(
         username=username,
         email=email,
         phone=phone,
-        city=city,
-        country=country,
         limit=limit,
         offset=offset,
     )
@@ -153,8 +131,6 @@ def sync(
     username: None | str | Unset = UNSET,
     email: None | str | Unset = UNSET,
     phone: None | str | Unset = UNSET,
-    city: None | str | Unset = UNSET,
-    country: None | str | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
 ) -> Any | HTTPValidationError | None:
@@ -164,8 +140,6 @@ def sync(
         username (None | str | Unset): Filter by username
         email (None | str | Unset): Filter by email
         phone (None | str | Unset): Filter by phone number
-        city (None | str | Unset): Filter by city of at least one address
-        country (None | str | Unset): Filter by country of at least one address
         limit (int | Unset):  Default: 50.
         offset (int | Unset):  Default: 0.
 
@@ -182,8 +156,6 @@ def sync(
         username=username,
         email=email,
         phone=phone,
-        city=city,
-        country=country,
         limit=limit,
         offset=offset,
     ).parsed
@@ -195,8 +167,6 @@ async def asyncio_detailed(
     username: None | str | Unset = UNSET,
     email: None | str | Unset = UNSET,
     phone: None | str | Unset = UNSET,
-    city: None | str | Unset = UNSET,
-    country: None | str | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
 ) -> Response[Any | HTTPValidationError]:
@@ -206,8 +176,6 @@ async def asyncio_detailed(
         username (None | str | Unset): Filter by username
         email (None | str | Unset): Filter by email
         phone (None | str | Unset): Filter by phone number
-        city (None | str | Unset): Filter by city of at least one address
-        country (None | str | Unset): Filter by country of at least one address
         limit (int | Unset):  Default: 50.
         offset (int | Unset):  Default: 0.
 
@@ -223,8 +191,6 @@ async def asyncio_detailed(
         username=username,
         email=email,
         phone=phone,
-        city=city,
-        country=country,
         limit=limit,
         offset=offset,
     )
@@ -240,8 +206,6 @@ async def asyncio(
     username: None | str | Unset = UNSET,
     email: None | str | Unset = UNSET,
     phone: None | str | Unset = UNSET,
-    city: None | str | Unset = UNSET,
-    country: None | str | Unset = UNSET,
     limit: int | Unset = 50,
     offset: int | Unset = 0,
 ) -> Any | HTTPValidationError | None:
@@ -251,8 +215,6 @@ async def asyncio(
         username (None | str | Unset): Filter by username
         email (None | str | Unset): Filter by email
         phone (None | str | Unset): Filter by phone number
-        city (None | str | Unset): Filter by city of at least one address
-        country (None | str | Unset): Filter by country of at least one address
         limit (int | Unset):  Default: 50.
         offset (int | Unset):  Default: 0.
 
@@ -270,8 +232,6 @@ async def asyncio(
             username=username,
             email=email,
             phone=phone,
-            city=city,
-            country=country,
             limit=limit,
             offset=offset,
         )
