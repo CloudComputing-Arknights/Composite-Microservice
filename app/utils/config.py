@@ -26,6 +26,10 @@ def get_user_client() -> UserClient:
         init_env()
     return _user_client
 
+def get_address_client() -> UserClient:
+    if _user_client is None:
+        init_env()
+    return get_user_client()
 
 def get_item_client() -> ItemClient:
     if _item_client is None:
