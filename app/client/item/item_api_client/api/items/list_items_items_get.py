@@ -1,5 +1,6 @@
 from http import HTTPStatus
 from typing import Any
+from uuid import UUID
 
 import httpx
 
@@ -14,12 +15,26 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
+    id: list[UUID] | None | Unset = UNSET,
     category: CategoryType | None | Unset = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
     skip: int | Unset = 0,
     limit: int | Unset = 10,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
+
+    json_id: list[str] | None | Unset
+    if isinstance(id, Unset):
+        json_id = UNSET
+    elif isinstance(id, list):
+        json_id = []
+        for id_type_0_item_data in id:
+            id_type_0_item = str(id_type_0_item_data)
+            json_id.append(id_type_0_item)
+
+    else:
+        json_id = id
+    params["id"] = json_id
 
     json_category: None | str | Unset
     if isinstance(category, Unset):
@@ -92,6 +107,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
+    id: list[UUID] | None | Unset = UNSET,
     category: CategoryType | None | Unset = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
     skip: int | Unset = 0,
@@ -102,6 +118,7 @@ def sync_detailed(
      Get a list of all items, with optional filtering.
 
     Args:
+        id (list[UUID] | None | Unset): Filter by a list of item IDs
         category (CategoryType | None | Unset): Filter by item's category
         transaction_type (None | TransactionType | Unset): Filter by item's transaction type
         skip (int | Unset):  Default: 0.
@@ -116,6 +133,7 @@ def sync_detailed(
     """
 
     kwargs = _get_kwargs(
+        id=id,
         category=category,
         transaction_type=transaction_type,
         skip=skip,
@@ -132,6 +150,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient | Client,
+    id: list[UUID] | None | Unset = UNSET,
     category: CategoryType | None | Unset = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
     skip: int | Unset = 0,
@@ -142,6 +161,7 @@ def sync(
      Get a list of all items, with optional filtering.
 
     Args:
+        id (list[UUID] | None | Unset): Filter by a list of item IDs
         category (CategoryType | None | Unset): Filter by item's category
         transaction_type (None | TransactionType | Unset): Filter by item's transaction type
         skip (int | Unset):  Default: 0.
@@ -157,6 +177,7 @@ def sync(
 
     return sync_detailed(
         client=client,
+        id=id,
         category=category,
         transaction_type=transaction_type,
         skip=skip,
@@ -167,6 +188,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
+    id: list[UUID] | None | Unset = UNSET,
     category: CategoryType | None | Unset = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
     skip: int | Unset = 0,
@@ -177,6 +199,7 @@ async def asyncio_detailed(
      Get a list of all items, with optional filtering.
 
     Args:
+        id (list[UUID] | None | Unset): Filter by a list of item IDs
         category (CategoryType | None | Unset): Filter by item's category
         transaction_type (None | TransactionType | Unset): Filter by item's transaction type
         skip (int | Unset):  Default: 0.
@@ -191,6 +214,7 @@ async def asyncio_detailed(
     """
 
     kwargs = _get_kwargs(
+        id=id,
         category=category,
         transaction_type=transaction_type,
         skip=skip,
@@ -205,6 +229,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient | Client,
+    id: list[UUID] | None | Unset = UNSET,
     category: CategoryType | None | Unset = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
     skip: int | Unset = 0,
@@ -215,6 +240,7 @@ async def asyncio(
      Get a list of all items, with optional filtering.
 
     Args:
+        id (list[UUID] | None | Unset): Filter by a list of item IDs
         category (CategoryType | None | Unset): Filter by item's category
         transaction_type (None | TransactionType | Unset): Filter by item's transaction type
         skip (int | Unset):  Default: 0.
@@ -231,6 +257,7 @@ async def asyncio(
     return (
         await asyncio_detailed(
             client=client,
+            id=id,
             category=category,
             transaction_type=transaction_type,
             skip=skip,

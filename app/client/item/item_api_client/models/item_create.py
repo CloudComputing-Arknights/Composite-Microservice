@@ -29,7 +29,6 @@ class ItemCreate:
         address_uuid (None | Unset | UUID): The UUID of position for transaction chosen from user's address lists, can
             be online or a physical place,
         image_urls (list[str] | Unset): The list of URL images of the post
-        user_uuid (None | Unset | UUID):
     """
 
     title: str
@@ -40,7 +39,6 @@ class ItemCreate:
     category: list[CategoryType] | None | Unset = UNSET
     address_uuid: None | Unset | UUID = UNSET
     image_urls: list[str] | Unset = UNSET
-    user_uuid: None | Unset | UUID = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -82,14 +80,6 @@ class ItemCreate:
         if not isinstance(self.image_urls, Unset):
             image_urls = self.image_urls
 
-        user_uuid: None | str | Unset
-        if isinstance(self.user_uuid, Unset):
-            user_uuid = UNSET
-        elif isinstance(self.user_uuid, UUID):
-            user_uuid = str(self.user_uuid)
-        else:
-            user_uuid = self.user_uuid
-
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -108,8 +98,6 @@ class ItemCreate:
             field_dict["address_UUID"] = address_uuid
         if image_urls is not UNSET:
             field_dict["image_urls"] = image_urls
-        if user_uuid is not UNSET:
-            field_dict["user_UUID"] = user_uuid
 
         return field_dict
 
@@ -149,7 +137,7 @@ class ItemCreate:
                     category_type_0.append(category_type_0_item)
 
                 return category_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(list[CategoryType] | None | Unset, data)
 
@@ -166,30 +154,13 @@ class ItemCreate:
                 address_uuid_type_0 = UUID(data)
 
                 return address_uuid_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(None | Unset | UUID, data)
 
         address_uuid = _parse_address_uuid(d.pop("address_UUID", UNSET))
 
         image_urls = cast(list[str], d.pop("image_urls", UNSET))
-
-        def _parse_user_uuid(data: object) -> None | Unset | UUID:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            try:
-                if not isinstance(data, str):
-                    raise TypeError()
-                user_uuid_type_0 = UUID(data)
-
-                return user_uuid_type_0
-            except:  # noqa: E722
-                pass
-            return cast(None | Unset | UUID, data)
-
-        user_uuid = _parse_user_uuid(d.pop("user_UUID", UNSET))
 
         item_create = cls(
             title=title,
@@ -200,7 +171,6 @@ class ItemCreate:
             category=category,
             address_uuid=address_uuid,
             image_urls=image_urls,
-            user_uuid=user_uuid,
         )
 
         item_create.additional_properties = d

@@ -27,7 +27,6 @@ class ItemRead:
         transaction_type (TransactionType):
         price (float): Price of the item must be greater than 0.
         item_uuid (UUID): Server-generated item ID Example: 99999999-9999-4999-8999-999999999999.
-        user_uuid (UUID): Server-generated user ID Example: 99999999-9999-4999-8999-999999999999.
         description (None | str | Unset): Description of the item in the post.
         category (list[CategoryType] | None | Unset): Category of the posted item.
         address_uuid (None | Unset | UUID): The UUID of position for transaction chosen from user's address lists, can
@@ -42,7 +41,6 @@ class ItemRead:
     transaction_type: TransactionType
     price: float
     item_uuid: UUID
-    user_uuid: UUID
     description: None | str | Unset = UNSET
     category: list[CategoryType] | None | Unset = UNSET
     address_uuid: None | Unset | UUID = UNSET
@@ -61,8 +59,6 @@ class ItemRead:
         price = self.price
 
         item_uuid = str(self.item_uuid)
-
-        user_uuid = str(self.user_uuid)
 
         description: None | str | Unset
         if isinstance(self.description, Unset):
@@ -111,7 +107,6 @@ class ItemRead:
                 "transaction_type": transaction_type,
                 "price": price,
                 "item_UUID": item_uuid,
-                "user_UUID": user_uuid,
             }
         )
         if description is not UNSET:
@@ -142,8 +137,6 @@ class ItemRead:
 
         item_uuid = UUID(d.pop("item_UUID"))
 
-        user_uuid = UUID(d.pop("user_UUID"))
-
         def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
@@ -169,7 +162,7 @@ class ItemRead:
                     category_type_0.append(category_type_0_item)
 
                 return category_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(list[CategoryType] | None | Unset, data)
 
@@ -186,7 +179,7 @@ class ItemRead:
                 address_uuid_type_0 = UUID(data)
 
                 return address_uuid_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(None | Unset | UUID, data)
 
@@ -214,7 +207,6 @@ class ItemRead:
             transaction_type=transaction_type,
             price=price,
             item_uuid=item_uuid,
-            user_uuid=user_uuid,
             description=description,
             category=category,
             address_uuid=address_uuid,

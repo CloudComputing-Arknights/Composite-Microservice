@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Item & Thread API",
-    "description": "Item and Thread microservice",
+    "title": "Item API",
+    "description": "Item microservice",
     "version": "0.1.0"
   },
   "paths": {
@@ -55,6 +55,28 @@
         "description": "Get a list of all items, with optional filtering.",
         "operationId": "list_items_items__get",
         "parameters": [
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by a list of item IDs",
+              "title": "Id"
+            },
+            "description": "Filter by a list of item IDs"
+          },
           {
             "name": "category",
             "in": "query",
@@ -441,18 +463,6 @@
             "type": "array",
             "title": "Image Urls",
             "description": "The list of URL images of the post"
-          },
-          "user_UUID": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "User Uuid"
           }
         },
         "type": "object",
@@ -477,8 +487,7 @@
             ],
             "price": 200.0,
             "title": "Sofa",
-            "transaction_type": "SALE",
-            "user_UUID": "99999999-9999-4999-8999-999999999999"
+            "transaction_type": "SALE"
           }
         ]
       },
@@ -558,13 +567,6 @@
             "description": "Server-generated item ID",
             "example": "99999999-9999-4999-8999-999999999999"
           },
-          "user_UUID": {
-            "type": "string",
-            "format": "uuid",
-            "title": "User Uuid",
-            "description": "Server-generated user ID",
-            "example": "99999999-9999-4999-8999-999999999999"
-          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -586,8 +588,7 @@
           "condition",
           "transaction_type",
           "price",
-          "item_UUID",
-          "user_UUID"
+          "item_UUID"
         ],
         "title": "ItemRead",
         "description": "Server representation returned to clients.",
@@ -607,8 +608,7 @@
             "price": 200.0,
             "title": "sofa",
             "transaction_type": "SALE",
-            "updated_at": "2025-02-21T13:00:00Z",
-            "user_UUID": "99999999-9999-4999-8999-999999999998"
+            "updated_at": "2025-02-21T13:00:00Z"
           }
         ]
       },

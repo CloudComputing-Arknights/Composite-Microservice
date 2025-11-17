@@ -159,7 +159,7 @@ class ItemUpdate:
                 condition_type_0 = ConditionType(data)
 
                 return condition_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(ConditionType | None | Unset, data)
 
@@ -181,7 +181,7 @@ class ItemUpdate:
                     category_type_0.append(category_type_0_item)
 
                 return category_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(list[CategoryType] | None | Unset, data)
 
@@ -198,7 +198,7 @@ class ItemUpdate:
                 transaction_type_type_0 = TransactionType(data)
 
                 return transaction_type_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(None | TransactionType | Unset, data)
 
@@ -224,7 +224,7 @@ class ItemUpdate:
                 address_uuid_type_0 = UUID(data)
 
                 return address_uuid_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(None | Unset | UUID, data)
 
@@ -241,7 +241,7 @@ class ItemUpdate:
                 image_urls_type_0 = cast(list[str], data)
 
                 return image_urls_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(list[str] | None | Unset, data)
 
