@@ -10,9 +10,13 @@ from app.client.user.user_address_api_client.api.default.get_user_users_user_id_
 from app.client.user.user_address_api_client.api.default.get_address_addresses_address_id_get import (
     asyncio as get_address_async,
 )
+from app.client.user.user_address_api_client.api.default.create_user_users_post import (
+    asyncio as create_user_async,
+)
 from app.client.user.user_address_api_client.models.body_login_auth_token_post import BodyLoginAuthTokenPost
 from app.client.user.user_address_api_client.models.http_validation_error import HTTPValidationError
 from app.client.user.user_address_api_client.models.token import Token
+from app.client.user.user_address_api_client.models.user_create import UserCreate
 from app.client.user.user_address_api_client.models.user_read import UserRead
 from app.client.user.user_address_api_client.types import UNSET
 from app.client.user.user_address_api_client.models.address_read import AddressRead
@@ -21,6 +25,7 @@ from app.models.dto.user_dto import (
     SignInRes,
     SignInReq,
     SignedInUserRes,
+    SignUpReq,
 )
 
 from app.models.dto.address_dto import AddressDTO
@@ -48,6 +53,54 @@ async def sign_in(payload: SignInReq):
     token_type = token.token_type if token.token_type is not UNSET else "bearer"
 
     return SignInRes(access_token=token.access_token, token_type=token_type)
+
+
+@user_router.post("/users", status_code=201, response_model=SignedInUserRes)
+async def create_user(payload: SignUpReq):
+    user_create = UserCreate(
+        username=payload.username,
+        email=payload.email,
+        password=payload.password,
+        # optional fields (phone, birth_date, avatar_url, addresses) left as defaults
+    )
+
+    result = await create_user_async(client=get_user_client(), body=user_create)
+
+    if result is None:
+        raise HTTPException(status_code=500, detail="User service did not respond")
+
+    if isinstance(result, HTTPValidationError):
+        raise HTTPException(status_code=400, detail="Invalid user data")
+
+    user: UserRead = result
+
+    return SignedInUserRes(
+        id=user.id if user.id is not UNSET else None,
+        username=user.username,
+        email=user.email,
+        phone=user.phone if getattr(user, "phone", UNSET) is not UNSET else None,
+        birth_date=(
+            user.birth_date
+            if getattr(user, "birth_date", UNSET) is not UNSET
+            else None
+        ),
+        avatar_url=(
+            user.avatar_url
+            if getattr(user, "avatar_url", UNSET) is not UNSET
+            else None
+        ),
+        addresses=[],
+        created_at=(
+            user.created_at
+            if getattr(user, "created_at", UNSET) is not UNSET
+            else None
+        ),
+        updated_at=(
+            user.updated_at
+            if getattr(user, "updated_at", UNSET) is not UNSET
+            else None
+        ),
+    )
 
 @user_router.get("/me/user", response_model=SignedInUserRes)
 async def auth_me(
@@ -94,7 +147,7 @@ async def auth_me(
 
         addresses_dto.append(
             AddressDTO(
-                id=addr.id if not isinstance(addr.id, type(UNSET)) else None,
+                id=addr.id if addr.id is not UNSET else None,
                 street=addr.street,
                 city=addr.city,
                 state=addr.state if not isinstance(addr.state, type(UNSET)) else None,

@@ -17,6 +17,8 @@ from app.resources.user_router import user_router
 from app.utils.config import init_env
 from app.utils.db_connection import create_db_and_tables, close_db_connection
 
+from fastapi.middleware.cors import CORSMiddleware
+
 # Table Models (Necessary)
 from app.models.po.address_user_po import AddressUser
 from app.models.po.item_address_po import ItemAddress
@@ -57,6 +59,24 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# -------------------------------------------------------------------------
+# CORS (for frontend → composite API calls)
+# -------------------------------------------------------------------------
+origins = [
+    "http://localhost:3000",
+    "https://browser-web-application-177030329297.europe-west1.run.app",  # Cloud Run frontend
+    # "https://v0-exchange-rates.vercel.app",
+    # "https://your-bucket-name.storage.googleapis.com",
+]
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # -----------------------------------------------------------------------------
 # Include Routers
