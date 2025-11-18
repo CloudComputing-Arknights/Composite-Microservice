@@ -6,7 +6,6 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.category_type import CategoryType
 from ...models.http_validation_error import HTTPValidationError
 from ...models.item_read import ItemRead
 from ...models.transaction_type import TransactionType
@@ -16,8 +15,9 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     id: list[UUID] | None | Unset = UNSET,
-    category: CategoryType | None | Unset = UNSET,
+    category_id: None | Unset | UUID = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
+    search: None | str | Unset = UNSET,
     skip: int | Unset = 0,
     limit: int | Unset = 10,
 ) -> dict[str, Any]:
@@ -36,14 +36,14 @@ def _get_kwargs(
         json_id = id
     params["id"] = json_id
 
-    json_category: None | str | Unset
-    if isinstance(category, Unset):
-        json_category = UNSET
-    elif isinstance(category, CategoryType):
-        json_category = category.value
+    json_category_id: None | str | Unset
+    if isinstance(category_id, Unset):
+        json_category_id = UNSET
+    elif isinstance(category_id, UUID):
+        json_category_id = str(category_id)
     else:
-        json_category = category
-    params["category"] = json_category
+        json_category_id = category_id
+    params["category_id"] = json_category_id
 
     json_transaction_type: None | str | Unset
     if isinstance(transaction_type, Unset):
@@ -53,6 +53,13 @@ def _get_kwargs(
     else:
         json_transaction_type = transaction_type
     params["transaction_type"] = json_transaction_type
+
+    json_search: None | str | Unset
+    if isinstance(search, Unset):
+        json_search = UNSET
+    else:
+        json_search = search
+    params["search"] = json_search
 
     params["skip"] = skip
 
@@ -108,8 +115,9 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     id: list[UUID] | None | Unset = UNSET,
-    category: CategoryType | None | Unset = UNSET,
+    category_id: None | Unset | UUID = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
+    search: None | str | Unset = UNSET,
     skip: int | Unset = 0,
     limit: int | Unset = 10,
 ) -> Response[HTTPValidationError | list[ItemRead]]:
@@ -119,8 +127,9 @@ def sync_detailed(
 
     Args:
         id (list[UUID] | None | Unset): Filter by a list of item IDs
-        category (CategoryType | None | Unset): Filter by item's category
+        category_id (None | Unset | UUID): Filter by item's category id
         transaction_type (None | TransactionType | Unset): Filter by item's transaction type
+        search (None | str | Unset): Search by item title (case-insensitive, partial match)
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 10.
 
@@ -134,8 +143,9 @@ def sync_detailed(
 
     kwargs = _get_kwargs(
         id=id,
-        category=category,
+        category_id=category_id,
         transaction_type=transaction_type,
+        search=search,
         skip=skip,
         limit=limit,
     )
@@ -151,8 +161,9 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     id: list[UUID] | None | Unset = UNSET,
-    category: CategoryType | None | Unset = UNSET,
+    category_id: None | Unset | UUID = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
+    search: None | str | Unset = UNSET,
     skip: int | Unset = 0,
     limit: int | Unset = 10,
 ) -> HTTPValidationError | list[ItemRead] | None:
@@ -162,8 +173,9 @@ def sync(
 
     Args:
         id (list[UUID] | None | Unset): Filter by a list of item IDs
-        category (CategoryType | None | Unset): Filter by item's category
+        category_id (None | Unset | UUID): Filter by item's category id
         transaction_type (None | TransactionType | Unset): Filter by item's transaction type
+        search (None | str | Unset): Search by item title (case-insensitive, partial match)
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 10.
 
@@ -178,8 +190,9 @@ def sync(
     return sync_detailed(
         client=client,
         id=id,
-        category=category,
+        category_id=category_id,
         transaction_type=transaction_type,
+        search=search,
         skip=skip,
         limit=limit,
     ).parsed
@@ -189,8 +202,9 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     id: list[UUID] | None | Unset = UNSET,
-    category: CategoryType | None | Unset = UNSET,
+    category_id: None | Unset | UUID = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
+    search: None | str | Unset = UNSET,
     skip: int | Unset = 0,
     limit: int | Unset = 10,
 ) -> Response[HTTPValidationError | list[ItemRead]]:
@@ -200,8 +214,9 @@ async def asyncio_detailed(
 
     Args:
         id (list[UUID] | None | Unset): Filter by a list of item IDs
-        category (CategoryType | None | Unset): Filter by item's category
+        category_id (None | Unset | UUID): Filter by item's category id
         transaction_type (None | TransactionType | Unset): Filter by item's transaction type
+        search (None | str | Unset): Search by item title (case-insensitive, partial match)
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 10.
 
@@ -215,8 +230,9 @@ async def asyncio_detailed(
 
     kwargs = _get_kwargs(
         id=id,
-        category=category,
+        category_id=category_id,
         transaction_type=transaction_type,
+        search=search,
         skip=skip,
         limit=limit,
     )
@@ -230,8 +246,9 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     id: list[UUID] | None | Unset = UNSET,
-    category: CategoryType | None | Unset = UNSET,
+    category_id: None | Unset | UUID = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
+    search: None | str | Unset = UNSET,
     skip: int | Unset = 0,
     limit: int | Unset = 10,
 ) -> HTTPValidationError | list[ItemRead] | None:
@@ -241,8 +258,9 @@ async def asyncio(
 
     Args:
         id (list[UUID] | None | Unset): Filter by a list of item IDs
-        category (CategoryType | None | Unset): Filter by item's category
+        category_id (None | Unset | UUID): Filter by item's category id
         transaction_type (None | TransactionType | Unset): Filter by item's transaction type
+        search (None | str | Unset): Search by item title (case-insensitive, partial match)
         skip (int | Unset):  Default: 0.
         limit (int | Unset):  Default: 10.
 
@@ -258,8 +276,9 @@ async def asyncio(
         await asyncio_detailed(
             client=client,
             id=id,
-            category=category,
+            category_id=category_id,
             transaction_type=transaction_type,
+            search=search,
             skip=skip,
             limit=limit,
         )

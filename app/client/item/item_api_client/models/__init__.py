@@ -1,6 +1,6 @@
 """Contains all the data models used in inputs/outputs"""
 
-from .category_type import CategoryType
+from .category_read import CategoryRead
 from .condition_type import ConditionType
 from .http_validation_error import HTTPValidationError
 from .item_create import ItemCreate
@@ -12,7 +12,7 @@ from .transaction_type import TransactionType
 from .validation_error import ValidationError
 
 __all__ = (
-    "CategoryType",
+    "CategoryRead",
     "ConditionType",
     "HTTPValidationError",
     "ItemCreate",

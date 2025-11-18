@@ -2,17 +2,20 @@ from __future__ import annotations
 
 import datetime
 from collections.abc import Mapping
-from typing import Any, TypeVar, cast
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 from dateutil.parser import isoparse
 
-from ..models.category_type import CategoryType
 from ..models.condition_type import ConditionType
 from ..models.transaction_type import TransactionType
 from ..types import UNSET, Unset
+
+if TYPE_CHECKING:
+    from ..models.category_read import CategoryRead
+
 
 T = TypeVar("T", bound="ItemRead")
 
@@ -28,10 +31,10 @@ class ItemRead:
         price (float): Price of the item must be greater than 0.
         item_uuid (UUID): Server-generated item ID Example: 99999999-9999-4999-8999-999999999999.
         description (None | str | Unset): Description of the item in the post.
-        category (list[CategoryType] | None | Unset): Category of the posted item.
         address_uuid (None | Unset | UUID): The UUID of position for transaction chosen from user's address lists, can
             be online or a physical place,
         image_urls (list[str] | Unset): The list of URL images of the post
+        categories (list[CategoryRead] | Unset): Categories associated with the item.
         created_at (datetime.datetime | Unset): Creation timestamp (UTC). Example: 2025-02-20T11:22:33Z.
         updated_at (datetime.datetime | Unset): Last update timestamp (UTC). Example: 2025-02-21T13:00:00Z.
     """
@@ -42,9 +45,9 @@ class ItemRead:
     price: float
     item_uuid: UUID
     description: None | str | Unset = UNSET
-    category: list[CategoryType] | None | Unset = UNSET
     address_uuid: None | Unset | UUID = UNSET
     image_urls: list[str] | Unset = UNSET
+    categories: list[CategoryRead] | Unset = UNSET
     created_at: datetime.datetime | Unset = UNSET
     updated_at: datetime.datetime | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -66,18 +69,6 @@ class ItemRead:
         else:
             description = self.description
 
-        category: list[str] | None | Unset
-        if isinstance(self.category, Unset):
-            category = UNSET
-        elif isinstance(self.category, list):
-            category = []
-            for category_type_0_item_data in self.category:
-                category_type_0_item = category_type_0_item_data.value
-                category.append(category_type_0_item)
-
-        else:
-            category = self.category
-
         address_uuid: None | str | Unset
         if isinstance(self.address_uuid, Unset):
             address_uuid = UNSET
@@ -89,6 +80,13 @@ class ItemRead:
         image_urls: list[str] | Unset = UNSET
         if not isinstance(self.image_urls, Unset):
             image_urls = self.image_urls
+
+        categories: list[dict[str, Any]] | Unset = UNSET
+        if not isinstance(self.categories, Unset):
+            categories = []
+            for categories_item_data in self.categories:
+                categories_item = categories_item_data.to_dict()
+                categories.append(categories_item)
 
         created_at: str | Unset = UNSET
         if not isinstance(self.created_at, Unset):
@@ -111,12 +109,12 @@ class ItemRead:
         )
         if description is not UNSET:
             field_dict["description"] = description
-        if category is not UNSET:
-            field_dict["category"] = category
         if address_uuid is not UNSET:
             field_dict["address_UUID"] = address_uuid
         if image_urls is not UNSET:
             field_dict["image_urls"] = image_urls
+        if categories is not UNSET:
+            field_dict["categories"] = categories
         if created_at is not UNSET:
             field_dict["created_at"] = created_at
         if updated_at is not UNSET:
@@ -126,6 +124,8 @@ class ItemRead:
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
+        from ..models.category_read import CategoryRead
+
         d = dict(src_dict)
         title = d.pop("title")
 
@@ -146,28 +146,6 @@ class ItemRead:
 
         description = _parse_description(d.pop("description", UNSET))
 
-        def _parse_category(data: object) -> list[CategoryType] | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            try:
-                if not isinstance(data, list):
-                    raise TypeError()
-                category_type_0 = []
-                _category_type_0 = data
-                for category_type_0_item_data in _category_type_0:
-                    category_type_0_item = CategoryType(category_type_0_item_data)
-
-                    category_type_0.append(category_type_0_item)
-
-                return category_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(list[CategoryType] | None | Unset, data)
-
-        category = _parse_category(d.pop("category", UNSET))
-
         def _parse_address_uuid(data: object) -> None | Unset | UUID:
             if data is None:
                 return data
@@ -186,6 +164,15 @@ class ItemRead:
         address_uuid = _parse_address_uuid(d.pop("address_UUID", UNSET))
 
         image_urls = cast(list[str], d.pop("image_urls", UNSET))
+
+        _categories = d.pop("categories", UNSET)
+        categories: list[CategoryRead] | Unset = UNSET
+        if _categories is not UNSET:
+            categories = []
+            for categories_item_data in _categories:
+                categories_item = CategoryRead.from_dict(categories_item_data)
+
+                categories.append(categories_item)
 
         _created_at = d.pop("created_at", UNSET)
         created_at: datetime.datetime | Unset
@@ -208,9 +195,9 @@ class ItemRead:
             price=price,
             item_uuid=item_uuid,
             description=description,
-            category=category,
             address_uuid=address_uuid,
             image_urls=image_urls,
+            categories=categories,
             created_at=created_at,
             updated_at=updated_at,
         )

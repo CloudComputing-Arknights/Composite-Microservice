@@ -7,7 +7,6 @@ from uuid import UUID
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-from ..models.category_type import CategoryType
 from ..models.condition_type import ConditionType
 from ..models.transaction_type import TransactionType
 from ..types import UNSET, Unset
@@ -25,10 +24,10 @@ class ItemCreate:
         transaction_type (TransactionType):
         price (float): Price of the item must be greater than 0.
         description (None | str | Unset): Description of the item in the post.
-        category (list[CategoryType] | None | Unset): Category of the posted item.
         address_uuid (None | Unset | UUID): The UUID of position for transaction chosen from user's address lists, can
             be online or a physical place,
         image_urls (list[str] | Unset): The list of URL images of the post
+        category_ids (list[UUID] | None | Unset): List of Category IDs to associate with this item.
     """
 
     title: str
@@ -36,9 +35,9 @@ class ItemCreate:
     transaction_type: TransactionType
     price: float
     description: None | str | Unset = UNSET
-    category: list[CategoryType] | None | Unset = UNSET
     address_uuid: None | Unset | UUID = UNSET
     image_urls: list[str] | Unset = UNSET
+    category_ids: list[UUID] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -56,18 +55,6 @@ class ItemCreate:
         else:
             description = self.description
 
-        category: list[str] | None | Unset
-        if isinstance(self.category, Unset):
-            category = UNSET
-        elif isinstance(self.category, list):
-            category = []
-            for category_type_0_item_data in self.category:
-                category_type_0_item = category_type_0_item_data.value
-                category.append(category_type_0_item)
-
-        else:
-            category = self.category
-
         address_uuid: None | str | Unset
         if isinstance(self.address_uuid, Unset):
             address_uuid = UNSET
@@ -79,6 +66,18 @@ class ItemCreate:
         image_urls: list[str] | Unset = UNSET
         if not isinstance(self.image_urls, Unset):
             image_urls = self.image_urls
+
+        category_ids: list[str] | None | Unset
+        if isinstance(self.category_ids, Unset):
+            category_ids = UNSET
+        elif isinstance(self.category_ids, list):
+            category_ids = []
+            for category_ids_type_0_item_data in self.category_ids:
+                category_ids_type_0_item = str(category_ids_type_0_item_data)
+                category_ids.append(category_ids_type_0_item)
+
+        else:
+            category_ids = self.category_ids
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -92,12 +91,12 @@ class ItemCreate:
         )
         if description is not UNSET:
             field_dict["description"] = description
-        if category is not UNSET:
-            field_dict["category"] = category
         if address_uuid is not UNSET:
             field_dict["address_UUID"] = address_uuid
         if image_urls is not UNSET:
             field_dict["image_urls"] = image_urls
+        if category_ids is not UNSET:
+            field_dict["category_ids"] = category_ids
 
         return field_dict
 
@@ -121,28 +120,6 @@ class ItemCreate:
 
         description = _parse_description(d.pop("description", UNSET))
 
-        def _parse_category(data: object) -> list[CategoryType] | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            try:
-                if not isinstance(data, list):
-                    raise TypeError()
-                category_type_0 = []
-                _category_type_0 = data
-                for category_type_0_item_data in _category_type_0:
-                    category_type_0_item = CategoryType(category_type_0_item_data)
-
-                    category_type_0.append(category_type_0_item)
-
-                return category_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(list[CategoryType] | None | Unset, data)
-
-        category = _parse_category(d.pop("category", UNSET))
-
         def _parse_address_uuid(data: object) -> None | Unset | UUID:
             if data is None:
                 return data
@@ -162,15 +139,37 @@ class ItemCreate:
 
         image_urls = cast(list[str], d.pop("image_urls", UNSET))
 
+        def _parse_category_ids(data: object) -> list[UUID] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                category_ids_type_0 = []
+                _category_ids_type_0 = data
+                for category_ids_type_0_item_data in _category_ids_type_0:
+                    category_ids_type_0_item = UUID(category_ids_type_0_item_data)
+
+                    category_ids_type_0.append(category_ids_type_0_item)
+
+                return category_ids_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[UUID] | None | Unset, data)
+
+        category_ids = _parse_category_ids(d.pop("category_ids", UNSET))
+
         item_create = cls(
             title=title,
             condition=condition,
             transaction_type=transaction_type,
             price=price,
             description=description,
-            category=category,
             address_uuid=address_uuid,
             image_urls=image_urls,
+            category_ids=category_ids,
         )
 
         item_create.additional_properties = d
