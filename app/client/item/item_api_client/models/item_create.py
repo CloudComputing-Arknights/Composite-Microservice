@@ -27,7 +27,7 @@ class ItemCreate:
         address_uuid (None | Unset | UUID): The UUID of position for transaction chosen from user's address lists, can
             be online or a physical place,
         image_urls (list[str] | Unset): The list of URL images of the post
-        category_ids (list[UUID] | None | Unset): List of Category IDs to associate with this item.
+        category_uui_ds (list[UUID] | None | Unset): List of Category IDs to associate with this item.
     """
 
     title: str
@@ -37,7 +37,7 @@ class ItemCreate:
     description: None | str | Unset = UNSET
     address_uuid: None | Unset | UUID = UNSET
     image_urls: list[str] | Unset = UNSET
-    category_ids: list[UUID] | None | Unset = UNSET
+    category_uui_ds: list[UUID] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -67,17 +67,17 @@ class ItemCreate:
         if not isinstance(self.image_urls, Unset):
             image_urls = self.image_urls
 
-        category_ids: list[str] | None | Unset
-        if isinstance(self.category_ids, Unset):
-            category_ids = UNSET
-        elif isinstance(self.category_ids, list):
-            category_ids = []
-            for category_ids_type_0_item_data in self.category_ids:
-                category_ids_type_0_item = str(category_ids_type_0_item_data)
-                category_ids.append(category_ids_type_0_item)
+        category_uui_ds: list[str] | None | Unset
+        if isinstance(self.category_uui_ds, Unset):
+            category_uui_ds = UNSET
+        elif isinstance(self.category_uui_ds, list):
+            category_uui_ds = []
+            for category_uui_ds_type_0_item_data in self.category_uui_ds:
+                category_uui_ds_type_0_item = str(category_uui_ds_type_0_item_data)
+                category_uui_ds.append(category_uui_ds_type_0_item)
 
         else:
-            category_ids = self.category_ids
+            category_uui_ds = self.category_uui_ds
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -95,8 +95,8 @@ class ItemCreate:
             field_dict["address_UUID"] = address_uuid
         if image_urls is not UNSET:
             field_dict["image_urls"] = image_urls
-        if category_ids is not UNSET:
-            field_dict["category_ids"] = category_ids
+        if category_uui_ds is not UNSET:
+            field_dict["category_UUIDs"] = category_uui_ds
 
         return field_dict
 
@@ -139,7 +139,7 @@ class ItemCreate:
 
         image_urls = cast(list[str], d.pop("image_urls", UNSET))
 
-        def _parse_category_ids(data: object) -> list[UUID] | None | Unset:
+        def _parse_category_uui_ds(data: object) -> list[UUID] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -147,19 +147,19 @@ class ItemCreate:
             try:
                 if not isinstance(data, list):
                     raise TypeError()
-                category_ids_type_0 = []
-                _category_ids_type_0 = data
-                for category_ids_type_0_item_data in _category_ids_type_0:
-                    category_ids_type_0_item = UUID(category_ids_type_0_item_data)
+                category_uui_ds_type_0 = []
+                _category_uui_ds_type_0 = data
+                for category_uui_ds_type_0_item_data in _category_uui_ds_type_0:
+                    category_uui_ds_type_0_item = UUID(category_uui_ds_type_0_item_data)
 
-                    category_ids_type_0.append(category_ids_type_0_item)
+                    category_uui_ds_type_0.append(category_uui_ds_type_0_item)
 
-                return category_ids_type_0
+                return category_uui_ds_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(list[UUID] | None | Unset, data)
 
-        category_ids = _parse_category_ids(d.pop("category_ids", UNSET))
+        category_uui_ds = _parse_category_uui_ds(d.pop("category_UUIDs", UNSET))
 
         item_create = cls(
             title=title,
@@ -169,7 +169,7 @@ class ItemCreate:
             description=description,
             address_uuid=address_uuid,
             image_urls=image_urls,
-            category_ids=category_ids,
+            category_uui_ds=category_uui_ds,
         )
 
         item_create.additional_properties = d

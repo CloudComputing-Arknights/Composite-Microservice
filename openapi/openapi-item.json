@@ -405,24 +405,24 @@
             "title": "Description",
             "description": "Optional description for the category."
           },
-          "id": {
+          "category_UUID": {
             "type": "string",
             "format": "uuid",
-            "title": "Id",
+            "title": "Category Uuid",
             "description": "Server-generated category ID"
           }
         },
         "type": "object",
         "required": [
           "name",
-          "id"
+          "category_UUID"
         ],
         "title": "CategoryRead",
         "description": "Representation of a Category returned from the server.",
         "examples": [
           {
+            "category_UUID": "11111111-1111-4111-8111-000000000001",
             "description": "Items for your home",
-            "id": "11111111-1111-4111-8111-000000000001",
             "name": "FURNITURE"
           }
         ]
@@ -504,7 +504,7 @@
             "title": "Image Urls",
             "description": "The list of URL images of the post"
           },
-          "category_ids": {
+          "category_UUIDs": {
             "anyOf": [
               {
                 "items": {
@@ -517,7 +517,7 @@
                 "type": "null"
               }
             ],
-            "title": "Category Ids",
+            "title": "Category Uuids",
             "description": "List of Category IDs to associate with this item."
           }
         },
@@ -533,9 +533,8 @@
         "examples": [
           {
             "address_UUID": "99999999-9999-4999-8999-000000000001",
-            "category_ids": [
-              "11111111-1111-4111-8111-000000000001",
-              "11111111-1111-4111-8111-000000000002"
+            "category_UUIDs": [
+              "e5ead3a7-9cc6-4e22-adca-1add6dcedada"
             ],
             "condition": "LIKE_NEW",
             "description": "Brown sofa.",
@@ -647,8 +646,8 @@
             "address_UUID": "99999999-9999-4999-8999-000000000001",
             "categories": [
               {
+                "category_UUID": "11111111-1111-4111-8111-000000000001",
                 "description": "Items for your home",
-                "id": "11111111-1111-4111-8111-000000000001",
                 "name": "FURNITURE"
               }
             ],
@@ -703,7 +702,7 @@
             ],
             "description": "Condition of the item (ConditionType)"
           },
-          "category_ids": {
+          "category_UUIDs": {
             "anyOf": [
               {
                 "items": {
@@ -716,7 +715,7 @@
                 "type": "null"
               }
             ],
-            "title": "Category Ids",
+            "title": "Category Uuids",
             "description": "A new list of Category IDs to associate with this item. (Replaces the old list)"
           },
           "transaction_type": {
