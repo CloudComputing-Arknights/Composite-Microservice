@@ -3,12 +3,6 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from uuid import UUID
 import logging
 
-from typing import List 
-from sqlmodel import select  
-
-from app.models.po.item_user_po import ItemUser 
-from app.client.item.item_api_client.api.items import list_items_items_get
-
 from app.client.item.item_api_client.client import Client
 from app.client.item.item_api_client.models import HTTPValidationError
 from app.client.item.item_api_client.api.items import (
@@ -153,65 +147,20 @@ async def get_my_job_status(
         item_UUID=downstream_response.item_uuid,
         error_message=getattr(downstream_response, "error_message", None)
     )
-    
 
 
-@item_user_router.get("/me/items", response_model=List[ItemRead])
+@item_user_router.get("/me/items")
 async def list_my_items(
+        request: Request,
         session: SessionDep,
+        skip: int = 0,
+        limit: int = 10,
         token: HTTPAuthorizationCredentials = Depends(security),
-        client: Client = Depends(get_item_client),
 ):
     try:
         user_uuid = get_user_id_from_token(token.credentials)
-        user_id_str = str(user_uuid)
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
-
-    try:
-        statement = select(ItemUser).where(ItemUser.user_id == user_id_str)
-        result = await session.exec(statement)
-        item_relations = result.all()
-    except Exception as e:
-        log.error(f"DB Error: {e}")
-        raise HTTPException(status_code=500, detail="Database error")
-
-    if not item_relations:
-        return []
-
-    item_ids_list = [UUID(rel.item_id) for rel in item_relations]
-
-    try:
-        downstream_response = await list_items_items_get.asyncio(
-            client=client,
-            id=item_ids_list,
-            limit=100
-        )
-
-        if downstream_response is None:
-            return []
-        
-        if isinstance(downstream_response, HTTPValidationError):
-             log.error("Downstream validation error fetching items")
-             return []
-
-        return [
-            ItemRead(
-                item_UUID=item.item_uuid,
-                title=item.title,
-                price=item.price,
-                condition=item.condition,
-                transaction_type=item.transaction_type,
-                description=item.description if item.description else None,
-                image_urls=item.image_urls if item.image_urls else [],
-                created_at=item.created_at,
-                updated_at=item.updated_at,
-            ) for item in downstream_response
-        ]
-
-    except Exception as e:
-        log.error(f"Error fetching items from downstream: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch item details")
 
 
 @item_user_router.patch("/me/items/{item_id}", response_model=ItemRead)
