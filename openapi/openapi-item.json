@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Item & Thread API",
-    "description": "Item and Thread microservice",
+    "title": "Item API",
+    "description": "Item microservice",
     "version": "0.1.0"
   },
   "paths": {
@@ -56,22 +56,44 @@
         "operationId": "list_items_items__get",
         "parameters": [
           {
-            "name": "category",
+            "name": "id",
             "in": "query",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "$ref": "#/components/schemas/CategoryType"
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "Filter by item's category",
-              "title": "Category"
+              "description": "Filter by a list of item IDs",
+              "title": "Id"
             },
-            "description": "Filter by item's category"
+            "description": "Filter by a list of item IDs"
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by item's category id",
+              "title": "Category Id"
+            },
+            "description": "Filter by item's category id"
           },
           {
             "name": "transaction_type",
@@ -90,6 +112,24 @@
               "title": "Transaction Type"
             },
             "description": "Filter by item's transaction type"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Search by item title (case-insensitive, partial match)",
+              "title": "Search"
+            },
+            "description": "Search by item title (case-insensitive, partial match)"
           },
           {
             "name": "skip",
@@ -343,12 +383,47 @@
   },
   "components": {
     "schemas": {
-      "CategoryType": {
-        "type": "string",
-        "enum": [
-          "FURNITURE"
+      "CategoryRead": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Name of the category"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description",
+            "description": "Optional description for the category."
+          },
+          "category_id": {
+            "type": "integer",
+            "title": "Category Id",
+            "description": "Unique integer ID for the category"
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "category_id"
         ],
-        "title": "CategoryType"
+        "title": "CategoryRead",
+        "description": "Representation of a Category returned from the server.",
+        "examples": [
+          {
+            "category_id": 1,
+            "description": "Items for your home",
+            "name": "FURNITURE"
+          }
+        ]
       },
       "ConditionType": {
         "type": "string",
@@ -396,30 +471,13 @@
             "$ref": "#/components/schemas/ConditionType",
             "description": "Condition of the item (ConditionType)"
           },
-          "category": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/CategoryType"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category",
-            "description": "Category of the posted item."
-          },
           "transaction_type": {
             "$ref": "#/components/schemas/TransactionType",
             "description": "Type of the transaction, can be SALE or RENT."
           },
           "price": {
             "type": "number",
-            "minimum": 0.0,
-            "title": "Price",
-            "description": "Price of the item must be greater than 0."
+            "title": "Price"
           },
           "address_UUID": {
             "anyOf": [
@@ -442,43 +500,44 @@
             "title": "Image Urls",
             "description": "The list of URL images of the post"
           },
-          "user_UUID": {
+          "category_ids": {
             "anyOf": [
               {
-                "type": "string",
-                "format": "uuid"
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "User Uuid"
+            "title": "Category Ids",
+            "description": "List of Category IDs to associate with this item."
           }
         },
         "type": "object",
         "required": [
           "title",
           "condition",
-          "transaction_type",
-          "price"
+          "transaction_type"
         ],
         "title": "ItemCreate",
         "description": "Creation payload for an item and its post.",
         "examples": [
           {
             "address_UUID": "99999999-9999-4999-8999-000000000001",
-            "category": [
-              "FURNITURE"
+            "category_ids": [
+              1
             ],
             "condition": "LIKE_NEW",
             "description": "Brown sofa.",
             "image_urls": [
-              "http://example.com/image1.jpg"
+              "https://example.com/image1.jpg"
             ],
             "price": 200.0,
             "title": "Sofa",
-            "transaction_type": "SALE",
-            "user_UUID": "99999999-9999-4999-8999-999999999999"
+            "transaction_type": "SALE"
           }
         ]
       },
@@ -505,30 +564,13 @@
             "$ref": "#/components/schemas/ConditionType",
             "description": "Condition of the item (ConditionType)"
           },
-          "category": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/CategoryType"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Category",
-            "description": "Category of the posted item."
-          },
           "transaction_type": {
             "$ref": "#/components/schemas/TransactionType",
             "description": "Type of the transaction, can be SALE or RENT."
           },
           "price": {
             "type": "number",
-            "minimum": 0.0,
-            "title": "Price",
-            "description": "Price of the item must be greater than 0."
+            "title": "Price"
           },
           "address_UUID": {
             "anyOf": [
@@ -558,12 +600,13 @@
             "description": "Server-generated item ID",
             "example": "99999999-9999-4999-8999-999999999999"
           },
-          "user_UUID": {
-            "type": "string",
-            "format": "uuid",
-            "title": "User Uuid",
-            "description": "Server-generated user ID",
-            "example": "99999999-9999-4999-8999-999999999999"
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryRead"
+            },
+            "type": "array",
+            "title": "Categories",
+            "description": "Categories associated with the item."
           },
           "created_at": {
             "type": "string",
@@ -585,30 +628,31 @@
           "title",
           "condition",
           "transaction_type",
-          "price",
-          "item_UUID",
-          "user_UUID"
+          "item_UUID"
         ],
         "title": "ItemRead",
         "description": "Server representation returned to clients.",
         "examples": [
           {
             "address_UUID": "99999999-9999-4999-8999-000000000001",
-            "category": [
-              "FURNITURE"
+            "categories": [
+              {
+                "category_id": 1,
+                "description": "Items for your home",
+                "name": "FURNITURE"
+              }
             ],
             "condition": "LIKE_NEW",
             "created_at": "2025-02-20T11:22:33Z",
             "description": "Brown sofa",
             "image_urls": [
-              "http://example.com/image1.jpg"
+              "https://example.com/image1.jpg"
             ],
             "item_UUID": "99999999-9999-4999-8999-999999999999",
             "price": 200.0,
             "title": "sofa",
             "transaction_type": "SALE",
-            "updated_at": "2025-02-21T13:00:00Z",
-            "user_UUID": "99999999-9999-4999-8999-999999999998"
+            "updated_at": "2025-02-21T13:00:00Z"
           }
         ]
       },
@@ -649,11 +693,11 @@
             ],
             "description": "Condition of the item (ConditionType)"
           },
-          "category": {
+          "category_ids": {
             "anyOf": [
               {
                 "items": {
-                  "$ref": "#/components/schemas/CategoryType"
+                  "type": "integer"
                 },
                 "type": "array"
               },
@@ -661,8 +705,8 @@
                 "type": "null"
               }
             ],
-            "title": "Category",
-            "description": "Category of the posted item."
+            "title": "Category Ids",
+            "description": "A new list of Category IDs to associate with this item. (Replaces the old list)"
           },
           "transaction_type": {
             "anyOf": [
@@ -676,17 +720,8 @@
             "description": "Type of the transaction can be SALE or RENT."
           },
           "price": {
-            "anyOf": [
-              {
-                "type": "number",
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Price",
-            "description": "Price of the item must be greater than 0."
+            "type": "number",
+            "title": "Price"
           },
           "address_UUID": {
             "anyOf": [

@@ -1,54 +1,43 @@
 from __future__ import annotations
 
-import datetime
 from collections.abc import Mapping
 from typing import Any, TypeVar, cast
 from uuid import UUID
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
-from dateutil.parser import isoparse
 
-from ..models.category_type import CategoryType
 from ..models.condition_type import ConditionType
 from ..models.transaction_type import TransactionType
 from ..types import UNSET, Unset
 
-T = TypeVar("T", bound="ItemRead")
+T = TypeVar("T", bound="ItemCreate")
 
 
 @_attrs_define
-class ItemRead:
-    """Server representation returned to clients.
+class ItemCreate:
+    """Creation payload for an item and its post.
 
     Attributes:
         title (str): Title of the post of the item
         condition (ConditionType):
         transaction_type (TransactionType):
-        price (float): Price of the item must be greater than 0.
-        item_uuid (UUID): Server-generated item ID Example: 99999999-9999-4999-8999-999999999999.
-        user_uuid (UUID): Server-generated user ID Example: 99999999-9999-4999-8999-999999999999.
         description (None | str | Unset): Description of the item in the post.
-        category (list[CategoryType] | None | Unset): Category of the posted item.
+        price (float | Unset):
         address_uuid (None | Unset | UUID): The UUID of position for transaction chosen from user's address lists, can
             be online or a physical place,
         image_urls (list[str] | Unset): The list of URL images of the post
-        created_at (datetime.datetime | Unset): Creation timestamp (UTC). Example: 2025-02-20T11:22:33Z.
-        updated_at (datetime.datetime | Unset): Last update timestamp (UTC). Example: 2025-02-21T13:00:00Z.
+        category_ids (list[int] | None | Unset): List of Category IDs to associate with this item.
     """
 
     title: str
     condition: ConditionType
     transaction_type: TransactionType
-    price: float
-    item_uuid: UUID
-    user_uuid: UUID
     description: None | str | Unset = UNSET
-    category: list[CategoryType] | None | Unset = UNSET
+    price: float | Unset = UNSET
     address_uuid: None | Unset | UUID = UNSET
     image_urls: list[str] | Unset = UNSET
-    created_at: datetime.datetime | Unset = UNSET
-    updated_at: datetime.datetime | Unset = UNSET
+    category_ids: list[int] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -58,29 +47,13 @@ class ItemRead:
 
         transaction_type = self.transaction_type.value
 
-        price = self.price
-
-        item_uuid = str(self.item_uuid)
-
-        user_uuid = str(self.user_uuid)
-
         description: None | str | Unset
         if isinstance(self.description, Unset):
             description = UNSET
         else:
             description = self.description
 
-        category: list[str] | None | Unset
-        if isinstance(self.category, Unset):
-            category = UNSET
-        elif isinstance(self.category, list):
-            category = []
-            for category_type_0_item_data in self.category:
-                category_type_0_item = category_type_0_item_data.value
-                category.append(category_type_0_item)
-
-        else:
-            category = self.category
+        price = self.price
 
         address_uuid: None | str | Unset
         if isinstance(self.address_uuid, Unset):
@@ -94,13 +67,14 @@ class ItemRead:
         if not isinstance(self.image_urls, Unset):
             image_urls = self.image_urls
 
-        created_at: str | Unset = UNSET
-        if not isinstance(self.created_at, Unset):
-            created_at = self.created_at.isoformat()
+        category_ids: list[int] | None | Unset
+        if isinstance(self.category_ids, Unset):
+            category_ids = UNSET
+        elif isinstance(self.category_ids, list):
+            category_ids = self.category_ids
 
-        updated_at: str | Unset = UNSET
-        if not isinstance(self.updated_at, Unset):
-            updated_at = self.updated_at.isoformat()
+        else:
+            category_ids = self.category_ids
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -109,23 +83,18 @@ class ItemRead:
                 "title": title,
                 "condition": condition,
                 "transaction_type": transaction_type,
-                "price": price,
-                "item_UUID": item_uuid,
-                "user_UUID": user_uuid,
             }
         )
         if description is not UNSET:
             field_dict["description"] = description
-        if category is not UNSET:
-            field_dict["category"] = category
+        if price is not UNSET:
+            field_dict["price"] = price
         if address_uuid is not UNSET:
             field_dict["address_UUID"] = address_uuid
         if image_urls is not UNSET:
             field_dict["image_urls"] = image_urls
-        if created_at is not UNSET:
-            field_dict["created_at"] = created_at
-        if updated_at is not UNSET:
-            field_dict["updated_at"] = updated_at
+        if category_ids is not UNSET:
+            field_dict["category_ids"] = category_ids
 
         return field_dict
 
@@ -138,12 +107,6 @@ class ItemRead:
 
         transaction_type = TransactionType(d.pop("transaction_type"))
 
-        price = d.pop("price")
-
-        item_uuid = UUID(d.pop("item_UUID"))
-
-        user_uuid = UUID(d.pop("user_UUID"))
-
         def _parse_description(data: object) -> None | str | Unset:
             if data is None:
                 return data
@@ -153,27 +116,7 @@ class ItemRead:
 
         description = _parse_description(d.pop("description", UNSET))
 
-        def _parse_category(data: object) -> list[CategoryType] | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            try:
-                if not isinstance(data, list):
-                    raise TypeError()
-                category_type_0 = []
-                _category_type_0 = data
-                for category_type_0_item_data in _category_type_0:
-                    category_type_0_item = CategoryType(category_type_0_item_data)
-
-                    category_type_0.append(category_type_0_item)
-
-                return category_type_0
-            except:  # noqa: E722
-                pass
-            return cast(list[CategoryType] | None | Unset, data)
-
-        category = _parse_category(d.pop("category", UNSET))
+        price = d.pop("price", UNSET)
 
         def _parse_address_uuid(data: object) -> None | Unset | UUID:
             if data is None:
@@ -186,7 +129,7 @@ class ItemRead:
                 address_uuid_type_0 = UUID(data)
 
                 return address_uuid_type_0
-            except:  # noqa: E722
+            except (TypeError, ValueError, AttributeError, KeyError):
                 pass
             return cast(None | Unset | UUID, data)
 
@@ -194,37 +137,36 @@ class ItemRead:
 
         image_urls = cast(list[str], d.pop("image_urls", UNSET))
 
-        _created_at = d.pop("created_at", UNSET)
-        created_at: datetime.datetime | Unset
-        if isinstance(_created_at, Unset):
-            created_at = UNSET
-        else:
-            created_at = isoparse(_created_at)
+        def _parse_category_ids(data: object) -> list[int] | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, list):
+                    raise TypeError()
+                category_ids_type_0 = cast(list[int], data)
 
-        _updated_at = d.pop("updated_at", UNSET)
-        updated_at: datetime.datetime | Unset
-        if isinstance(_updated_at, Unset):
-            updated_at = UNSET
-        else:
-            updated_at = isoparse(_updated_at)
+                return category_ids_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(list[int] | None | Unset, data)
 
-        item_read = cls(
+        category_ids = _parse_category_ids(d.pop("category_ids", UNSET))
+
+        item_create = cls(
             title=title,
             condition=condition,
             transaction_type=transaction_type,
-            price=price,
-            item_uuid=item_uuid,
-            user_uuid=user_uuid,
             description=description,
-            category=category,
+            price=price,
             address_uuid=address_uuid,
             image_urls=image_urls,
-            created_at=created_at,
-            updated_at=updated_at,
+            category_ids=category_ids,
         )
 
-        item_read.additional_properties = d
-        return item_read
+        item_create.additional_properties = d
+        return item_create
 
     @property
     def additional_keys(self) -> list[str]:

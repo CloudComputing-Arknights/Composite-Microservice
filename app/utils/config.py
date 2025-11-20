@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 
-from app.client.item.item_thread_api_client.client import Client as ItemClient
+from app.client.item.item_api_client.client import Client as ItemClient
 from app.client.transaction.transaction_api_client.client import Client as TransactionClient
 from app.client.user.user_address_api_client.client import Client as UserClient
 
