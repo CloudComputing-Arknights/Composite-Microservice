@@ -46,13 +46,21 @@ async def create_transaction(
             status=NewTransactionRequestStatus(payload.status),
             message=payload.message,
         )
-        
+
+        request_kwargs = {
+        "client": get_transaction_client(),
+        "body": transaction_req,
+        }
+
+
+        if x_idempotency_key:
+            request_kwargs["x_idempotency_key"] = x_idempotency_key
+
         transaction_result = await create_transaction_transactions_transaction_post.asyncio(
-            client=get_transaction_client(),
-            body=transaction_req,
-            x_idempotency_key=x_idempotency_key
+            **request_kwargs
         )
-        
+
+
         if not transaction_result:
             raise HTTPException(status_code=500, detail="Failed to create transaction in microservice")
         
@@ -169,7 +177,7 @@ async def list_transactions(
         transactions_result = await list_transactions_transactions_get.asyncio(
             client=get_transaction_client(),
             status_param=status_param_client,
-            type=type_client,
+            type_=type_client,
             limit=limit,
             offset=offset
         )
