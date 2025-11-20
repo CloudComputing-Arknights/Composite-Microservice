@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Depends, status, Query, Response
 from fastapi.exceptions import HTTPException
 from typing import List, Optional
 from uuid import UUID
@@ -90,31 +90,33 @@ async def list_public_items(
 )
 async def get_public_item_by_id(
     item_id: UUID,
+    response: Response,
     client: Client = Depends(get_item_client)
 ):
     """
     Get an item by its id
     """
-    response = await get_item_items_item_id_get.asyncio(
+    downstream_response = await get_item_items_item_id_get.asyncio(
         client=client,
         item_id=item_id
     )
 
-    if response is None:
+    if downstream_response is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Item not found"
         )
 
-    if isinstance(response, HTTPValidationError):
+    if isinstance(downstream_response, HTTPValidationError):
         log.error(
             "Downstream 'item service' validation failed for GET /items/%s. Response: %s",
             item_id,
-            response.to_dict()
+            downstream_response.to_dict()
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An internal error occurred."
         )
-
-    return ItemRead(**response.to_dict())
+    etag_value = downstream_response.updated_at.isoformat()    # timestamp -> ISO string
+    response.headers["ETag"] = f'"{etag_value}"'
+    return ItemRead(**downstream_response.to_dict())
