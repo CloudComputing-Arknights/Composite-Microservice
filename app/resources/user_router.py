@@ -113,6 +113,7 @@ async def auth_me(
         raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
 
     try:
+        token_str = authorization_header.split(" ")[1]
         user_id = get_user_id_from_token(authorization_header)
         user_id = UUID(str(user_id))
     except Exception:
