@@ -1,26 +1,49 @@
 from uuid import UUID
+from datetime import date
+from typing import Optional
 
 from fastapi import APIRouter, Request, HTTPException, Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
+from pydantic import BaseModel
 
+# --- Downstream Client Imports ---
+
+# Login
 from app.client.user.user_address_api_client.api.default.login_auth_token_post import asyncio as user_login_async
+from app.client.user.user_address_api_client.models.body_login_auth_token_post import BodyLoginAuthTokenPost
+
+# Get User
 from app.client.user.user_address_api_client.api.default.get_user_users_user_id_get import (
     asyncio as get_user_async,
 )
+
+# Get Address
 from app.client.user.user_address_api_client.api.default.get_address_addresses_address_id_get import (
     asyncio as get_address_async,
 )
+
+# Create User
 from app.client.user.user_address_api_client.api.default.create_user_users_post import (
     asyncio as create_user_async,
 )
-from app.client.user.user_address_api_client.models.body_login_auth_token_post import BodyLoginAuthTokenPost
+
+# Update User (Added for Edit Profile)
+# NOTE: If this import fails, check your api/default folder for the exact filename
+from app.client.user.user_address_api_client.api.default.update_user_users_user_id_put import (
+    asyncio as update_user_async,
+)
+
+# --- Model Imports ---
 from app.client.user.user_address_api_client.models.http_validation_error import HTTPValidationError
 from app.client.user.user_address_api_client.models.token import Token
 from app.client.user.user_address_api_client.models.user_create import UserCreate
 from app.client.user.user_address_api_client.models.user_read import UserRead
+# Added UserUpdate model
+from app.client.user.user_address_api_client.models.user_update import UserUpdate
 from app.client.user.user_address_api_client.types import UNSET
 from app.client.user.user_address_api_client.models.address_read import AddressRead
 
+# --- DTOs & Utils ---
 from app.models.dto.user_dto import (
     SignInRes,
     SignInReq,
@@ -37,6 +60,8 @@ from app.utils.db_connection import get_session
 
 user_router = APIRouter()
 
+
+# --- 1. Login ---
 @user_router.post("/token", response_model=SignInRes)
 async def sign_in(payload: SignInReq):
     body = BodyLoginAuthTokenPost(username=payload.username, password=payload.password)
@@ -55,6 +80,7 @@ async def sign_in(payload: SignInReq):
     return SignInRes(access_token=token.access_token, token_type=token_type)
 
 
+# --- 2. Register ---
 @user_router.post("/users", status_code=201, response_model=SignedInUserRes)
 async def create_user(payload: SignUpReq):
     user_create = UserCreate(
@@ -102,6 +128,8 @@ async def create_user(payload: SignUpReq):
         ),
     )
 
+
+# --- 3. Get Profile ---
 @user_router.get("/me/user", response_model=SignedInUserRes)
 async def auth_me(
         request: Request,
@@ -113,8 +141,9 @@ async def auth_me(
         raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
 
     try:
+        # FIX: Split the token string to remove 'Bearer ' prefix
         token_str = authorization_header.split(" ")[1]
-        user_id = get_user_id_from_token(authorization_header)
+        user_id = get_user_id_from_token(token_str)
         user_id = UUID(str(user_id))
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -167,6 +196,73 @@ async def auth_me(
         birth_date=user.birth_date if not isinstance(user.birth_date, type(UNSET)) else None,
         avatar_url=user.avatar_url if not isinstance(user.avatar_url, type(UNSET)) else None,
         addresses=addresses_dto,
+        created_at=user.created_at if not isinstance(user.created_at, type(UNSET)) else None,
+        updated_at=user.updated_at if not isinstance(user.updated_at, type(UNSET)) else None,
+    )
+
+
+# --- 4. Update Profile (Added Function) ---
+
+class UpdateProfileReq(BaseModel):
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    avatar_url: Optional[str] = None
+    birth_date: Optional[date] = None
+
+
+@user_router.put("/me/user", response_model=SignedInUserRes)
+async def update_me(
+    payload: UpdateProfileReq,
+    request: Request,
+):
+    # 1. Verify Token
+    authorization_header = request.headers.get("Authorization")
+    if not authorization_header or not authorization_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
+
+    try:
+        token_str = authorization_header.split(" ")[1]
+        user_id = get_user_id_from_token(token_str)
+        user_uuid = UUID(str(user_id))
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    # 2. Prepare Data for Downstream Service
+    # 'exclude_unset=True' is handled by Pydantic logic or we pass explicit None values
+    # assuming the downstream handles partial updates if fields are nullable.
+    user_update = UserUpdate(
+        email=payload.email,
+        phone=payload.phone,
+        avatar_url=payload.avatar_url,
+        birth_date=payload.birth_date
+    )
+
+    # 3. Call Downstream Update Endpoint
+    result = await update_user_async(
+        client=get_user_client(),
+        user_id=user_uuid,
+        body=user_update
+    )
+
+    if result is None:
+         raise HTTPException(status_code=500, detail="Update failed or service unavailable")
+         
+    if isinstance(result, HTTPValidationError):
+         raise HTTPException(status_code=400, detail="Invalid data for update")
+
+    # 4. Return Updated User
+    user: UserRead = result
+    
+    # Returning empty addresses list as update usually doesn't return address relations.
+    # If needed, you could refetch addresses here similar to auth_me.
+    return SignedInUserRes(
+        id=user.id if not isinstance(user.id, type(UNSET)) else None,
+        username=user.username,
+        email=user.email,
+        phone=user.phone if not isinstance(user.phone, type(UNSET)) else None,
+        birth_date=user.birth_date if not isinstance(user.birth_date, type(UNSET)) else None,
+        avatar_url=user.avatar_url if not isinstance(user.avatar_url, type(UNSET)) else None,
+        addresses=[], 
         created_at=user.created_at if not isinstance(user.created_at, type(UNSET)) else None,
         updated_at=user.updated_at if not isinstance(user.updated_at, type(UNSET)) else None,
     )
