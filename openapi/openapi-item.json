@@ -84,8 +84,7 @@
             "schema": {
               "anyOf": [
                 {
-                  "type": "string",
-                  "format": "uuid"
+                  "type": "integer"
                 },
                 {
                   "type": "null"
@@ -405,23 +404,22 @@
             "title": "Description",
             "description": "Optional description for the category."
           },
-          "category_UUID": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Category Uuid",
-            "description": "Server-generated category ID"
+          "category_id": {
+            "type": "integer",
+            "title": "Category Id",
+            "description": "Unique integer ID for the category"
           }
         },
         "type": "object",
         "required": [
           "name",
-          "category_UUID"
+          "category_id"
         ],
         "title": "CategoryRead",
         "description": "Representation of a Category returned from the server.",
         "examples": [
           {
-            "category_UUID": "11111111-1111-4111-8111-000000000001",
+            "category_id": 1,
             "description": "Items for your home",
             "name": "FURNITURE"
           }
@@ -479,9 +477,7 @@
           },
           "price": {
             "type": "number",
-            "minimum": 0.0,
-            "title": "Price",
-            "description": "Price of the item must be greater than 0."
+            "title": "Price"
           },
           "address_UUID": {
             "anyOf": [
@@ -504,12 +500,11 @@
             "title": "Image Urls",
             "description": "The list of URL images of the post"
           },
-          "category_UUIDs": {
+          "category_ids": {
             "anyOf": [
               {
                 "items": {
-                  "type": "string",
-                  "format": "uuid"
+                  "type": "integer"
                 },
                 "type": "array"
               },
@@ -517,7 +512,7 @@
                 "type": "null"
               }
             ],
-            "title": "Category Uuids",
+            "title": "Category Ids",
             "description": "List of Category IDs to associate with this item."
           }
         },
@@ -525,16 +520,15 @@
         "required": [
           "title",
           "condition",
-          "transaction_type",
-          "price"
+          "transaction_type"
         ],
         "title": "ItemCreate",
         "description": "Creation payload for an item and its post.",
         "examples": [
           {
             "address_UUID": "99999999-9999-4999-8999-000000000001",
-            "category_UUIDs": [
-              "e5ead3a7-9cc6-4e22-adca-1add6dcedada"
+            "category_ids": [
+              1
             ],
             "condition": "LIKE_NEW",
             "description": "Brown sofa.",
@@ -576,9 +570,7 @@
           },
           "price": {
             "type": "number",
-            "minimum": 0.0,
-            "title": "Price",
-            "description": "Price of the item must be greater than 0."
+            "title": "Price"
           },
           "address_UUID": {
             "anyOf": [
@@ -636,7 +628,6 @@
           "title",
           "condition",
           "transaction_type",
-          "price",
           "item_UUID"
         ],
         "title": "ItemRead",
@@ -646,7 +637,7 @@
             "address_UUID": "99999999-9999-4999-8999-000000000001",
             "categories": [
               {
-                "category_UUID": "11111111-1111-4111-8111-000000000001",
+                "category_id": 1,
                 "description": "Items for your home",
                 "name": "FURNITURE"
               }
@@ -702,12 +693,11 @@
             ],
             "description": "Condition of the item (ConditionType)"
           },
-          "category_UUIDs": {
+          "category_ids": {
             "anyOf": [
               {
                 "items": {
-                  "type": "string",
-                  "format": "uuid"
+                  "type": "integer"
                 },
                 "type": "array"
               },
@@ -715,7 +705,7 @@
                 "type": "null"
               }
             ],
-            "title": "Category Uuids",
+            "title": "Category Ids",
             "description": "A new list of Category IDs to associate with this item. (Replaces the old list)"
           },
           "transaction_type": {
@@ -730,17 +720,8 @@
             "description": "Type of the transaction can be SALE or RENT."
           },
           "price": {
-            "anyOf": [
-              {
-                "type": "number",
-                "minimum": 0.0
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Price",
-            "description": "Price of the item must be greater than 0."
+            "type": "number",
+            "title": "Price"
           },
           "address_UUID": {
             "anyOf": [

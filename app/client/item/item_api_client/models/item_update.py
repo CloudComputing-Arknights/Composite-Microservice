@@ -22,10 +22,10 @@ class ItemUpdate:
         title (None | str | Unset): Title of the post of the item
         description (None | str | Unset): Description of the item.
         condition (ConditionType | None | Unset): Condition of the item (ConditionType)
-        category_uui_ds (list[UUID] | None | Unset): A new list of Category IDs to associate with this item. (Replaces
-            the old list)
+        category_ids (list[int] | None | Unset): A new list of Category IDs to associate with this item. (Replaces the
+            old list)
         transaction_type (None | TransactionType | Unset): Type of the transaction can be SALE or RENT.
-        price (float | None | Unset): Price of the item must be greater than 0.
+        price (float | Unset):
         address_uuid (None | Unset | UUID): The position for transaction, can be online or a physical place.
         image_urls (list[str] | None | Unset): The list of URL images of the post
     """
@@ -33,9 +33,9 @@ class ItemUpdate:
     title: None | str | Unset = UNSET
     description: None | str | Unset = UNSET
     condition: ConditionType | None | Unset = UNSET
-    category_uui_ds: list[UUID] | None | Unset = UNSET
+    category_ids: list[int] | None | Unset = UNSET
     transaction_type: None | TransactionType | Unset = UNSET
-    price: float | None | Unset = UNSET
+    price: float | Unset = UNSET
     address_uuid: None | Unset | UUID = UNSET
     image_urls: list[str] | None | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
@@ -61,17 +61,14 @@ class ItemUpdate:
         else:
             condition = self.condition
 
-        category_uui_ds: list[str] | None | Unset
-        if isinstance(self.category_uui_ds, Unset):
-            category_uui_ds = UNSET
-        elif isinstance(self.category_uui_ds, list):
-            category_uui_ds = []
-            for category_uui_ds_type_0_item_data in self.category_uui_ds:
-                category_uui_ds_type_0_item = str(category_uui_ds_type_0_item_data)
-                category_uui_ds.append(category_uui_ds_type_0_item)
+        category_ids: list[int] | None | Unset
+        if isinstance(self.category_ids, Unset):
+            category_ids = UNSET
+        elif isinstance(self.category_ids, list):
+            category_ids = self.category_ids
 
         else:
-            category_uui_ds = self.category_uui_ds
+            category_ids = self.category_ids
 
         transaction_type: None | str | Unset
         if isinstance(self.transaction_type, Unset):
@@ -81,11 +78,7 @@ class ItemUpdate:
         else:
             transaction_type = self.transaction_type
 
-        price: float | None | Unset
-        if isinstance(self.price, Unset):
-            price = UNSET
-        else:
-            price = self.price
+        price = self.price
 
         address_uuid: None | str | Unset
         if isinstance(self.address_uuid, Unset):
@@ -113,8 +106,8 @@ class ItemUpdate:
             field_dict["description"] = description
         if condition is not UNSET:
             field_dict["condition"] = condition
-        if category_uui_ds is not UNSET:
-            field_dict["category_UUIDs"] = category_uui_ds
+        if category_ids is not UNSET:
+            field_dict["category_ids"] = category_ids
         if transaction_type is not UNSET:
             field_dict["transaction_type"] = transaction_type
         if price is not UNSET:
@@ -165,7 +158,7 @@ class ItemUpdate:
 
         condition = _parse_condition(d.pop("condition", UNSET))
 
-        def _parse_category_uui_ds(data: object) -> list[UUID] | None | Unset:
+        def _parse_category_ids(data: object) -> list[int] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -173,19 +166,14 @@ class ItemUpdate:
             try:
                 if not isinstance(data, list):
                     raise TypeError()
-                category_uui_ds_type_0 = []
-                _category_uui_ds_type_0 = data
-                for category_uui_ds_type_0_item_data in _category_uui_ds_type_0:
-                    category_uui_ds_type_0_item = UUID(category_uui_ds_type_0_item_data)
+                category_ids_type_0 = cast(list[int], data)
 
-                    category_uui_ds_type_0.append(category_uui_ds_type_0_item)
-
-                return category_uui_ds_type_0
+                return category_ids_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(list[UUID] | None | Unset, data)
+            return cast(list[int] | None | Unset, data)
 
-        category_uui_ds = _parse_category_uui_ds(d.pop("category_UUIDs", UNSET))
+        category_ids = _parse_category_ids(d.pop("category_ids", UNSET))
 
         def _parse_transaction_type(data: object) -> None | TransactionType | Unset:
             if data is None:
@@ -204,14 +192,7 @@ class ItemUpdate:
 
         transaction_type = _parse_transaction_type(d.pop("transaction_type", UNSET))
 
-        def _parse_price(data: object) -> float | None | Unset:
-            if data is None:
-                return data
-            if isinstance(data, Unset):
-                return data
-            return cast(float | None | Unset, data)
-
-        price = _parse_price(d.pop("price", UNSET))
+        price = d.pop("price", UNSET)
 
         def _parse_address_uuid(data: object) -> None | Unset | UUID:
             if data is None:
@@ -251,7 +232,7 @@ class ItemUpdate:
             title=title,
             description=description,
             condition=condition,
-            category_uui_ds=category_uui_ds,
+            category_ids=category_ids,
             transaction_type=transaction_type,
             price=price,
             address_uuid=address_uuid,

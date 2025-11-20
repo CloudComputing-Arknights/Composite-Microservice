@@ -28,9 +28,9 @@ class ItemRead:
         title (str): Title of the post of the item
         condition (ConditionType):
         transaction_type (TransactionType):
-        price (float): Price of the item must be greater than 0.
         item_uuid (UUID): Server-generated item ID Example: 99999999-9999-4999-8999-999999999999.
         description (None | str | Unset): Description of the item in the post.
+        price (float | Unset):
         address_uuid (None | Unset | UUID): The UUID of position for transaction chosen from user's address lists, can
             be online or a physical place,
         image_urls (list[str] | Unset): The list of URL images of the post
@@ -42,9 +42,9 @@ class ItemRead:
     title: str
     condition: ConditionType
     transaction_type: TransactionType
-    price: float
     item_uuid: UUID
     description: None | str | Unset = UNSET
+    price: float | Unset = UNSET
     address_uuid: None | Unset | UUID = UNSET
     image_urls: list[str] | Unset = UNSET
     categories: list[CategoryRead] | Unset = UNSET
@@ -59,8 +59,6 @@ class ItemRead:
 
         transaction_type = self.transaction_type.value
 
-        price = self.price
-
         item_uuid = str(self.item_uuid)
 
         description: None | str | Unset
@@ -68,6 +66,8 @@ class ItemRead:
             description = UNSET
         else:
             description = self.description
+
+        price = self.price
 
         address_uuid: None | str | Unset
         if isinstance(self.address_uuid, Unset):
@@ -103,12 +103,13 @@ class ItemRead:
                 "title": title,
                 "condition": condition,
                 "transaction_type": transaction_type,
-                "price": price,
                 "item_UUID": item_uuid,
             }
         )
         if description is not UNSET:
             field_dict["description"] = description
+        if price is not UNSET:
+            field_dict["price"] = price
         if address_uuid is not UNSET:
             field_dict["address_UUID"] = address_uuid
         if image_urls is not UNSET:
@@ -133,8 +134,6 @@ class ItemRead:
 
         transaction_type = TransactionType(d.pop("transaction_type"))
 
-        price = d.pop("price")
-
         item_uuid = UUID(d.pop("item_UUID"))
 
         def _parse_description(data: object) -> None | str | Unset:
@@ -145,6 +144,8 @@ class ItemRead:
             return cast(None | str | Unset, data)
 
         description = _parse_description(d.pop("description", UNSET))
+
+        price = d.pop("price", UNSET)
 
         def _parse_address_uuid(data: object) -> None | Unset | UUID:
             if data is None:
@@ -192,9 +193,9 @@ class ItemRead:
             title=title,
             condition=condition,
             transaction_type=transaction_type,
-            price=price,
             item_uuid=item_uuid,
             description=description,
+            price=price,
             address_uuid=address_uuid,
             image_urls=image_urls,
             categories=categories,

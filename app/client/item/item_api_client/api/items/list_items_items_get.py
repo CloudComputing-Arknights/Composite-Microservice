@@ -15,7 +15,7 @@ from ...types import UNSET, Response, Unset
 def _get_kwargs(
     *,
     id: list[UUID] | None | Unset = UNSET,
-    category_id: None | Unset | UUID = UNSET,
+    category_id: int | None | Unset = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
     search: None | str | Unset = UNSET,
     skip: int | Unset = 0,
@@ -36,11 +36,9 @@ def _get_kwargs(
         json_id = id
     params["id"] = json_id
 
-    json_category_id: None | str | Unset
+    json_category_id: int | None | Unset
     if isinstance(category_id, Unset):
         json_category_id = UNSET
-    elif isinstance(category_id, UUID):
-        json_category_id = str(category_id)
     else:
         json_category_id = category_id
     params["category_id"] = json_category_id
@@ -115,7 +113,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
     id: list[UUID] | None | Unset = UNSET,
-    category_id: None | Unset | UUID = UNSET,
+    category_id: int | None | Unset = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
     search: None | str | Unset = UNSET,
     skip: int | Unset = 0,
@@ -127,7 +125,7 @@ def sync_detailed(
 
     Args:
         id (list[UUID] | None | Unset): Filter by a list of item IDs
-        category_id (None | Unset | UUID): Filter by item's category id
+        category_id (int | None | Unset): Filter by item's category id
         transaction_type (None | TransactionType | Unset): Filter by item's transaction type
         search (None | str | Unset): Search by item title (case-insensitive, partial match)
         skip (int | Unset):  Default: 0.
@@ -161,7 +159,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
     id: list[UUID] | None | Unset = UNSET,
-    category_id: None | Unset | UUID = UNSET,
+    category_id: int | None | Unset = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
     search: None | str | Unset = UNSET,
     skip: int | Unset = 0,
@@ -173,7 +171,7 @@ def sync(
 
     Args:
         id (list[UUID] | None | Unset): Filter by a list of item IDs
-        category_id (None | Unset | UUID): Filter by item's category id
+        category_id (int | None | Unset): Filter by item's category id
         transaction_type (None | TransactionType | Unset): Filter by item's transaction type
         search (None | str | Unset): Search by item title (case-insensitive, partial match)
         skip (int | Unset):  Default: 0.
@@ -202,7 +200,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
     id: list[UUID] | None | Unset = UNSET,
-    category_id: None | Unset | UUID = UNSET,
+    category_id: int | None | Unset = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
     search: None | str | Unset = UNSET,
     skip: int | Unset = 0,
@@ -214,7 +212,7 @@ async def asyncio_detailed(
 
     Args:
         id (list[UUID] | None | Unset): Filter by a list of item IDs
-        category_id (None | Unset | UUID): Filter by item's category id
+        category_id (int | None | Unset): Filter by item's category id
         transaction_type (None | TransactionType | Unset): Filter by item's transaction type
         search (None | str | Unset): Search by item title (case-insensitive, partial match)
         skip (int | Unset):  Default: 0.
@@ -246,7 +244,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
     id: list[UUID] | None | Unset = UNSET,
-    category_id: None | Unset | UUID = UNSET,
+    category_id: int | None | Unset = UNSET,
     transaction_type: None | TransactionType | Unset = UNSET,
     search: None | str | Unset = UNSET,
     skip: int | Unset = 0,
@@ -258,7 +256,7 @@ async def asyncio(
 
     Args:
         id (list[UUID] | None | Unset): Filter by a list of item IDs
-        category_id (None | Unset | UUID): Filter by item's category id
+        category_id (int | None | Unset): Filter by item's category id
         transaction_type (None | TransactionType | Unset): Filter by item's transaction type
         search (None | str | Unset): Search by item title (case-insensitive, partial match)
         skip (int | Unset):  Default: 0.
