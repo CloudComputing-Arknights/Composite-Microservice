@@ -14,7 +14,9 @@ from app.client.user.user_address_api_client.api.default.update_address_addresse
 from app.client.user.user_address_api_client.models.address_update import AddressUpdate
 
 
-address_router = APIRouter()
+address_router = APIRouter(
+    tags=["Address"]
+)
 
 @address_router.put("/addresses/{address_id}", response_model=AddressDTO)
 async def update_address(
@@ -68,3 +70,4 @@ async def delete_address(
     )
     
     return {"message": "Address deleted successfully"}
+

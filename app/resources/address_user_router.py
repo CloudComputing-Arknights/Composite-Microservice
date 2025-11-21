@@ -13,7 +13,9 @@ from app.client.user.user_address_api_client.api.default.create_address_addresse
 )
 from app.client.user.user_address_api_client.models.address_create import AddressCreate
 
-address_user_router = APIRouter()
+address_user_router = APIRouter(
+    tags=["Address User"]
+)
 
 @address_user_router.post("/me/addresses", response_model=AddressDTO)
 async def create_my_address(

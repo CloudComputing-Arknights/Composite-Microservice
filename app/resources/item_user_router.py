@@ -28,7 +28,7 @@ from app.utils.config import get_item_client
 
 log = logging.getLogger(__name__)
 item_user_router = APIRouter(
-    tags=["item_user_router"]
+    tags=["Item User"]
 )
 
 security = HTTPBearer()
@@ -211,8 +211,14 @@ async def update_my_item(
     return ItemRead(**response.to_dict())
 
 @item_user_router.delete("/me/items/{item_id}")
-async def delete_my_item(item_id: str, request: Request, session: SessionDep):
-    authorization_header = request.headers.get("Authorization")
-    user_id = get_user_id_from_token(authorization_header)
-    token = authorization_header.replace("Bearer ", "")
+async def delete_my_item(
+        item_id: str,
+        session: SessionDep,
+        token: HTTPAuthorizationCredentials = Depends(security),
+):
+    try:
+        user_id = get_user_id_from_token(token.credentials)
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
     pass

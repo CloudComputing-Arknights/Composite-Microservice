@@ -30,7 +30,9 @@ from app.client.transaction.transaction_api_client.models.list_transactions_tran
     ListTransactionsTransactionsGetTypeType0
 )
 
-transaction_router = APIRouter()
+transaction_router = APIRouter(
+    tags=["Transaction"]
+)
 
 
 @transaction_router.post("/transactions/transaction", response_model=TransactionRes, status_code=status.HTTP_201_CREATED)

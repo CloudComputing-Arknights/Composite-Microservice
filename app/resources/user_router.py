@@ -1,6 +1,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Request, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.client.user.user_address_api_client.api.default.update_user_users_user_id_put import asyncio as update_user_async
@@ -39,7 +40,11 @@ from app.utils.auth import get_user_id_from_token
 from app.utils.config import get_user_client, get_address_client
 from app.utils.db_connection import get_session
 
-user_router = APIRouter()
+user_router = APIRouter(
+    tags=["User"]
+)
+
+security = HTTPBearer()
 
 @user_router.post("/token", response_model=SignInRes)
 async def sign_in(payload: SignInReq):
@@ -108,17 +113,11 @@ async def create_user(payload: SignUpReq):
 
 @user_router.get("/me/user", response_model=SignedInUserRes)
 async def auth_me(
-        request: Request,
         session: AsyncSession = Depends(get_session),
+        token: HTTPAuthorizationCredentials = Depends(security),
 ):
-
-    authorization_header = request.headers.get("Authorization")
-    if not authorization_header or not authorization_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing or invalid Authorization header")
-
     try:
-        token_str = authorization_header.split(" ")[1]
-        user_id = get_user_id_from_token(token_str)
+        user_id = get_user_id_from_token(token.credentials)
         user_id = UUID(str(user_id))
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
