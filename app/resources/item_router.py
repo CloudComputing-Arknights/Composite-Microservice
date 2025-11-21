@@ -27,23 +27,6 @@ item_router = APIRouter(
 
 
 @item_router.get(
-    "/categories",
-    response_model=List[CategoryRead]
-)
-async def list_categories(
-        skip: int = Query(0, ge=0, description="Number of items to skip"),
-        limit: int = Query(10, ge=1, le=100, description="Max number of items to return"),
-        client: Client = Depends(get_item_client)
-) -> List[CategoryRead]:
-    downstream_response = await list_categories_items_categories_get.asyncio(
-        client=client,
-        skip=skip,
-        limit=limit
-    )
-    return [CategoryRead(**category.to_dict()) for category in downstream_response]
-
-
-@item_router.get(
     "/",
     response_model=List[ItemRead],
     summary="Get items through pagination.",
@@ -52,7 +35,7 @@ async def list_public_items(
     item_ids: Optional[List[UUID]] = Query(
         None, alias="id", description="Filter by a list of item IDs"
     ),
-    category_id: Optional[UUID] = Query(
+    category_id: Optional[int] = Query(
         None, description="Filter by item's category"
     ),
     transaction_type: Optional[TransactionType] = Query(
@@ -94,6 +77,23 @@ async def list_public_items(
             detail="An internal error occurred."
         )
     return [ItemRead(**item.to_dict()) for item in response]
+
+
+@item_router.get(
+    "/categories",
+    response_model=List[CategoryRead]
+)
+async def list_categories(
+        skip: int = Query(0, ge=0, description="Number of items to skip"),
+        limit: int = Query(10, ge=1, le=100, description="Max number of items to return"),
+        client: Client = Depends(get_item_client)
+) -> List[CategoryRead]:
+    downstream_response = await list_categories_items_categories_get.asyncio(
+        client=client,
+        skip=skip,
+        limit=limit
+    )
+    return [CategoryRead(**category.to_dict()) for category in downstream_response]
 
 
 @item_router.get(
