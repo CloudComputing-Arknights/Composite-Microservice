@@ -27,6 +27,8 @@ from app.models.po.address_user_po import AddressUser
 from app.models.po.item_address_po import ItemAddress
 from app.models.po.item_user_po import ItemUser
 from app.models.po.transaction_user_item_po import TransactionUserItem
+from app.models.po.thread_user_po import ThreadUser
+
 
 # -----------------------------------------------------------------------------
 # Environments and Clients
