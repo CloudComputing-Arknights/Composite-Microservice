@@ -59,21 +59,9 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# -------------------------------------------------------------------------
-# CORS (for frontend → composite API calls)
-# -------------------------------------------------------------------------
-origins = [
-    "http://localhost:8080",
-    "http://localhost:3000",
-    "https://browser-web-application-177030329297.europe-west1.run.app",  # Cloud Run frontend
-    # "https://v0-exchange-rates.vercel.app",
-    # "https://your-bucket-name.storage.googleapis.com",
-]
-
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
