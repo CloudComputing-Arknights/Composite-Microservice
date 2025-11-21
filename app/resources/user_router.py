@@ -35,7 +35,9 @@ from app.utils.auth import get_user_id_from_token
 from app.utils.config import get_user_client, get_address_client
 from app.utils.db_connection import get_session
 
-user_router = APIRouter()
+user_router = APIRouter(
+    tags=["User"]
+)
 
 @user_router.post("/token", response_model=SignInRes)
 async def sign_in(payload: SignInReq):

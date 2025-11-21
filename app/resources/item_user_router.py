@@ -28,7 +28,7 @@ from app.utils.config import get_item_client
 
 log = logging.getLogger(__name__)
 item_user_router = APIRouter(
-    tags=["item_user_router"]
+    tags=["Item User"]
 )
 
 security = HTTPBearer()
