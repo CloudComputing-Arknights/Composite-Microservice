@@ -38,3 +38,10 @@ class SignUpReq(BaseModel):
     username: str
     email: str
     password: str
+
+class UpdateProfileReq(BaseModel):
+    # This matches the payload the frontend sends for PUT /me/user
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    avatar_url: Optional[str] = None
+    birth_date: Optional[date] = None

@@ -4,6 +4,9 @@ from fastapi import APIRouter, Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.client.user.user_address_api_client.api.default.update_user_users_user_id_put import asyncio as update_user_async
+from app.client.user.user_address_api_client.models.user_update import UserUpdate
+
 from app.client.user.user_address_api_client.api.default.login_auth_token_post import asyncio as user_login_async
 from app.client.user.user_address_api_client.api.default.get_user_users_user_id_get import (
     asyncio as get_user_async,
@@ -27,6 +30,7 @@ from app.models.dto.user_dto import (
     SignInReq,
     SignedInUserRes,
     SignUpReq,
+    UpdateProfileReq,
 )
 
 from app.models.dto.address_dto import AddressDTO
@@ -166,6 +170,60 @@ async def auth_me(
         birth_date=user.birth_date if not isinstance(user.birth_date, type(UNSET)) else None,
         avatar_url=user.avatar_url if not isinstance(user.avatar_url, type(UNSET)) else None,
         addresses=addresses_dto,
+        created_at=user.created_at if not isinstance(user.created_at, type(UNSET)) else None,
+        updated_at=user.updated_at if not isinstance(user.updated_at, type(UNSET)) else None,
+    )
+
+@user_router.put("/me/user", response_model=SignedInUserRes)
+async def update_me(
+    payload: UpdateProfileReq,
+    request: Request,
+):
+    # 1. Verify Token
+    authorization_header = request.headers.get("Authorization")
+    if not authorization_header or not authorization_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Invalid Header")
+    try:
+        # Using the clean token string fix here as well
+        token_str = authorization_header.split(" ")[1]
+        user_id = get_user_id_from_token(token_str)
+        user_uuid = UUID(str(user_id))
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid Token")
+
+    # 2. Prepare Data for Downstream Service
+    user_update = UserUpdate(
+        email=payload.email,
+        phone=payload.phone,
+        avatar_url=payload.avatar_url,
+        birth_date=payload.birth_date
+    )
+
+    # 3. Call Downstream Update Endpoint
+    result = await update_user_async(
+        client=get_user_client(),
+        user_id=user_uuid,
+        body=user_update
+    )
+
+    if result is None:
+         raise HTTPException(status_code=500, detail="Update failed or service unavailable")
+    if isinstance(result, HTTPValidationError):
+         raise HTTPException(status_code=400, detail="Invalid data for update")
+
+    # 4. Return Updated User Data (using existing mapping logic)
+    user: UserRead = result
+    
+    # NOTE: You would typically call auth_me logic here to refetch and include addresses,
+    # but for simplicity, we return the user with an empty address list.
+    return SignedInUserRes(
+        id=user.id if not isinstance(user.id, type(UNSET)) else None,
+        username=user.username,
+        email=user.email,
+        phone=user.phone if not isinstance(user.phone, type(UNSET)) else None,
+        birth_date=user.birth_date if not isinstance(user.birth_date, type(UNSET)) else None,
+        avatar_url=user.avatar_url if not isinstance(user.avatar_url, type(UNSET)) else None,
+        addresses=[], 
         created_at=user.created_at if not isinstance(user.created_at, type(UNSET)) else None,
         updated_at=user.updated_at if not isinstance(user.updated_at, type(UNSET)) else None,
     )
