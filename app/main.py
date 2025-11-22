@@ -13,8 +13,8 @@ from app.resources.root_router import root_router
 from app.resources.transaction_router import transaction_router
 from app.resources.transaction_user_item_router import transaction_user_item_router
 from app.resources.user_router import user_router
-from app.resources.messaging_router import router as messaging_thread_user_router
-from app.resources.messaging_thread_router import router as messaging_thread_router
+from app.resources.thread_user_router import router as messaging_thread_user_router
+from app.resources.thread_router import router as messaging_thread_router
 
 
 from app.utils.config import init_env

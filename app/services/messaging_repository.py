@@ -2,16 +2,16 @@ from fastapi import HTTPException
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.models.po.messaging_thread_user_po import MessagingThreadUser
+from app.models.po.thread_user_po import ThreadUser
 
 
 async def create_thread_user_relation(
         session: AsyncSession,
         thread_id: str,
         user_id: str,
-) -> MessagingThreadUser:
+) -> ThreadUser:
 
-    relation = MessagingThreadUser(thread_id=thread_id, user_id=user_id)
+    relation = ThreadUser(thread_id=thread_id, user_id=user_id)
     session.add(relation)
     await session.commit()
     await session.refresh(relation)
@@ -23,8 +23,8 @@ async def get_thread_users(
         thread_id: str,
 ) -> list[str]:
 
-    statement = select(MessagingThreadUser).where(
-        MessagingThreadUser.thread_id == thread_id
+    statement = select(ThreadUser).where(
+        ThreadUser.thread_id == thread_id
     )
     result = await session.exec(statement)
     relations = result.all()
@@ -39,8 +39,8 @@ async def get_user_threads(
         user_id: str,
 ) -> list[str]:
 
-    statement = select(MessagingThreadUser).where(
-        MessagingThreadUser.user_id == user_id
+    statement = select(ThreadUser).where(
+        ThreadUser.user_id == user_id
     )
     result = await session.exec(statement)
     relations = result.all()

@@ -22,7 +22,7 @@ log = logging.getLogger(__name__)
 
 item_router = APIRouter(
     prefix="/items",
-    tags=["Items"]
+    tags=["Item"]
 )
 
 

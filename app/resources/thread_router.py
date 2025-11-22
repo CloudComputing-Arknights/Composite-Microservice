@@ -13,8 +13,8 @@ from app.client.messaging.messaging_microservice_client.models.http_validation_e
 
 
 router = APIRouter(
-    prefix="/messaging/threads",
-    tags=["Messaging Threads"]
+    prefix="/threads",
+    tags=["Thread"]
 )
 
 
