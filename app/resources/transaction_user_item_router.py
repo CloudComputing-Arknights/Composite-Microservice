@@ -295,7 +295,6 @@ async def update_transaction(
                 raise HTTPException(status_code=403, detail="Only receiver can accept or reject the transaction")
         elif payload.status == "completed":
             # For now, allow either party to mark as completed
-            # You can add more specific logic here if needed
             pass
         
         update_req = UpdateStatusRequest(
