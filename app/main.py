@@ -10,6 +10,7 @@ from app.resources.item_address_router import item_address_router
 from app.resources.item_router import item_router
 from app.resources.item_user_router import item_user_router
 from app.resources.root_router import root_router
+from app.resources.transaction_router import transaction_router
 from app.resources.transaction_user_item_router import transaction_user_item_router
 from app.resources.user_router import user_router
 
@@ -75,5 +76,6 @@ app.include_router(item_address_router)
 app.include_router(item_router)
 app.include_router(item_user_router)
 app.include_router(root_router)
+app.include_router(transaction_router)
 app.include_router(transaction_user_item_router)
 app.include_router(user_router)
