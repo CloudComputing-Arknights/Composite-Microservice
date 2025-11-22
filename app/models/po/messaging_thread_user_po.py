@@ -2,8 +2,8 @@ from sqlmodel import SQLModel, Field
 from typing import Optional
 from datetime import datetime
 
-class ThreadUser(SQLModel, table=True):
-    __tablename__ = "thread_user"
+class MessagingThreadUser(SQLModel, table=True):
+    __tablename__ = "messaging_thread_user"
 
     id: Optional[int] = Field(default=None, primary_key=True)
     thread_id: str = Field(index=True)
