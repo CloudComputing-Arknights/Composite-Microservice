@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Request, Depends
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from uuid import UUID
 
 from app.models.dto.address_dto import AddressDTO
@@ -13,6 +14,9 @@ from app.client.user.user_address_api_client.api.default.create_address_addresse
 )
 from app.client.user.user_address_api_client.models.address_create import AddressCreate
 
+
+security = HTTPBearer()
+
 address_user_router = APIRouter(
     tags=["Address User"]
 )
@@ -20,20 +24,17 @@ address_user_router = APIRouter(
 @address_user_router.post("/me/addresses", response_model=AddressDTO)
 async def create_my_address(
     payload: AddressDTO,
-    request: Request,
-    session: SessionDep, # Database session required for linking
+    session: SessionDep,
+    token: HTTPAuthorizationCredentials = Depends(security),
 ):
-    # 1. Verify Token & Get User ID
-    auth_header = request.headers.get("Authorization")
-    if not auth_header or not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Missing Token")
-    
+    # 1. Extract User ID from Token
     try:
-        token_str = auth_header.split(" ")[1]
+        token_str = token.credentials
         user_id = get_user_id_from_token(token_str)
         user_uuid = UUID(str(user_id))
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid Token")
+    
 
     # 2. Create Address Downstream (without user_id)
     downstream_body = AddressCreate(

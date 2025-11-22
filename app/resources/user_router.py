@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Request, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -177,15 +177,11 @@ async def auth_me(
 @user_router.put("/me/user", response_model=SignedInUserRes)
 async def update_me(
     payload: UpdateProfileReq,
-    request: Request,
+    token: HTTPAuthorizationCredentials = Depends(security),
 ):
     # 1. Verify Token
-    authorization_header = request.headers.get("Authorization")
-    if not authorization_header or not authorization_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Invalid Header")
     try:
-        # Using the clean token string fix here as well
-        token_str = authorization_header.split(" ")[1]
+        token_str = token.credentials 
         user_id = get_user_id_from_token(token_str)
         user_uuid = UUID(str(user_id))
     except Exception:
