@@ -30,3 +30,4 @@ class TransactionRes(BaseModel):
 class UpdateTransactionStatusReq(BaseModel):
     status: Literal["accepted", "rejected", "canceled", "completed"]
 
+
