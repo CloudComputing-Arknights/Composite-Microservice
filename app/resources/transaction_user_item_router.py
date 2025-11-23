@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Header, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional, Literal
+import asyncio
 
 from app.models.dto.transaction_user_item_dto import (
     CreateTransactionReq,
@@ -124,15 +125,17 @@ async def get_transaction(
         raise HTTPException(status_code=401, detail="Invalid token")
     
     try:
-        transaction_result = await get_transaction_transactions_transaction_id_get.asyncio(
-            client=get_transaction_client(),
-            transaction_id=transaction_id
+        # Parallel execution: fetch from microservice and local DB simultaneously
+        transaction_result, relation = await asyncio.gather(
+            get_transaction_transactions_transaction_id_get.asyncio(
+                client=get_transaction_client(),
+                transaction_id=transaction_id
+            ),
+            get_transaction_relation(session, transaction_id)
         )
         
         if not transaction_result:
             raise HTTPException(status_code=404, detail="Transaction not found")
-        
-        relation = await get_transaction_relation(session, transaction_id)
         
         # Verify user is a participant (initiator or receiver)
         user_id_str = str(user_uuid)
@@ -178,13 +181,7 @@ async def list_transactions(
     try:
         user_id_str = str(user_uuid)
         
-        relations = await get_user_transactions(session, user_id_str)
-        
-        if requested_item_id:
-            relations = [r for r in relations if r.requested_item_id == requested_item_id]
-        
-        relation_map = {r.transaction_id: r for r in relations}
-        
+        # Prepare query parameters for downstream service
         status_param_client = None
         if status_param:
             status_param_client = ListTransactionsTransactionsGetStatusParamType0(status_param)
@@ -193,13 +190,22 @@ async def list_transactions(
         if type:
             type_client = ListTransactionsTransactionsGetTypeType0(type)
         
-        transactions_result = await list_transactions_transactions_get.asyncio(
-            client=get_transaction_client(),
-            status_param=status_param_client,
-            type_=type_client,
-            limit=limit,
-            offset=offset
+        # Parallel execution: fetch user relations and downstream transactions simultaneously
+        relations, transactions_result = await asyncio.gather(
+            get_user_transactions(session, user_id_str),
+            list_transactions_transactions_get.asyncio(
+                client=get_transaction_client(),
+                status_param=status_param_client,
+                type_=type_client,
+                limit=limit,
+                offset=offset
+            )
         )
+        
+        if requested_item_id:
+            relations = [r for r in relations if r.requested_item_id == requested_item_id]
+        
+        relation_map = {r.transaction_id: r for r in relations}
         
         if not transactions_result:
             return []
@@ -313,18 +319,20 @@ async def delete_transaction(
     try:
         user_id_str = str(user_uuid)
         
-        transaction_result = await get_transaction_transactions_transaction_id_get.asyncio(
-            client=get_transaction_client(),
-            transaction_id=transaction_id
+        # Parallel execution: fetch transaction, relation, and verify permission simultaneously
+        transaction_result, relation, is_initiator = await asyncio.gather(
+            get_transaction_transactions_transaction_id_get.asyncio(
+                client=get_transaction_client(),
+                transaction_id=transaction_id
+            ),
+            get_transaction_relation(session, transaction_id),
+            verify_transaction_initiator(session, transaction_id, user_id_str)
         )
         
         if not transaction_result:
             raise HTTPException(status_code=404, detail="Transaction not found")
         
-        relation = await get_transaction_relation(session, transaction_id)
-        
         # Permission check: only initiator can delete
-        is_initiator = await verify_transaction_initiator(session, transaction_id, user_id_str)
         if not is_initiator:
             raise HTTPException(status_code=403, detail="Only initiator can delete the transaction")
         
