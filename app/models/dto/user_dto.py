@@ -45,3 +45,10 @@ class UpdateProfileReq(BaseModel):
     phone: Optional[str] = None
     avatar_url: Optional[str] = None
     birth_date: Optional[date] = None
+
+
+class PublicUserRes(BaseModel):
+    """Public user information (safe to expose)"""
+    id: UUID
+    username: str
+    avatar_url: Optional[str] = None

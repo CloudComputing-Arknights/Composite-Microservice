@@ -31,6 +31,7 @@ from app.models.dto.user_dto import (
     SignedInUserRes,
     SignUpReq,
     UpdateProfileReq,
+    PublicUserRes,
 )
 
 from app.models.dto.address_dto import AddressDTO
@@ -110,6 +111,26 @@ async def create_user(payload: SignUpReq):
             else None
         ),
     )
+
+@user_router.get("/users/{user_id}", response_model=PublicUserRes)
+async def get_user_by_id(user_id: UUID):
+    """Get public user information by user ID."""
+    result = await get_user_async(user_id=user_id, client=get_user_client())
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    if isinstance(result, HTTPValidationError):
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user: UserRead = result
+
+    return PublicUserRes(
+        id=user.id if user.id is not UNSET else user_id,
+        username=user.username,
+        avatar_url=user.avatar_url if not isinstance(user.avatar_url, type(UNSET)) else None,
+    )
+
 
 @user_router.get("/me/user", response_model=SignedInUserRes)
 async def auth_me(
