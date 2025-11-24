@@ -11,19 +11,15 @@ from app.client.item.item_api_client.api.items import (
     get_item_items_item_id_get,
     list_categories_items_categories_get
 )
-from app.client.user.user_address_api_client.api.default import  get_address_addresses_address_id_get
 from app.client.item.item_api_client.models import HTTPValidationError
 from app.models.dto.item_dto import (
     ItemRead,
     CategoryRead,
     TransactionType
 )
-from app.models.dto.address_dto import (
-    AddressBase,
-    AddressDTO
-)
 from app.utils.config import get_item_client
 from app.utils.config import get_address_client
+from app.services.item_service import merge_item_with_address
 
 log = logging.getLogger(__name__)
 
@@ -33,41 +29,10 @@ item_router = APIRouter(
 )
 
 
-async def merge_item_with_address(
-        item_obj,
-        address_client
-) -> ItemRead:
-    """
-    Insert address information into ItemRead
-    """
-    item_dict = item_obj.to_dict()
-    addr_id = item_dict.get("address_UUID")
-
-    if addr_id:
-        address_response = await get_address_addresses_address_id_get.asyncio(
-            address_id=UUID(str(addr_id)),
-            client=address_client
-        )
-
-        if isinstance(address_response, HTTPValidationError):
-            log.error(
-                "Downstream 'user service (address)' validation failed. Response: %s",
-                address_response.to_dict()
-            )
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="An internal error occurred."
-            )
-        if address_response is not None:
-            item_dict["address"] = address_response.to_dict()
-
-    return ItemRead(**item_dict)
-
-
 @item_router.get(
     "/",
     response_model=List[ItemRead],
-    summary="Get items through pagination.",
+    summary="Get all items through pagination.",
 )
 async def list_public_items(
     item_ids: Optional[List[UUID]] = Query(
@@ -148,32 +113,35 @@ async def list_categories(
 async def get_public_item_by_id(
     item_id: UUID,
     response: Response,
-    client: Client = Depends(get_item_client)
+    item_client: Client = Depends(get_item_client),
+    address_client: Client = Depends(get_address_client)
 ):
     """
     Get an item by its id
     """
-    downstream_response = await get_item_items_item_id_get.asyncio(
-        client=client,
+    item_response = await get_item_items_item_id_get.asyncio(
+        client=item_client,
         item_id=item_id
     )
 
-    if downstream_response is None:
+    if item_response is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Item not found"
         )
 
-    if isinstance(downstream_response, HTTPValidationError):
+    if isinstance(item_response, HTTPValidationError):
         log.error(
             "Downstream 'item service' validation failed for GET /items/%s. Response: %s",
             item_id,
-            downstream_response.to_dict()
+            item_response.to_dict()
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An internal error occurred."
         )
-    etag_value = downstream_response.updated_at.isoformat()    # timestamp -> ISO string
+
+    etag_value = item_response.updated_at.isoformat()    # timestamp -> ISO string
     response.headers["ETag"] = f'"{etag_value}"'
-    return ItemRead(**downstream_response.to_dict())
+
+    return await merge_item_with_address(item_response, address_client)

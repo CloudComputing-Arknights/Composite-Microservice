@@ -21,9 +21,11 @@ from app.services.item_user_repository import (
 from app.services.item_user_repository import (
     get_user_items
 )
+from app.services.item_service import merge_item_with_address
 from app.utils.auth import get_user_id_from_token
 from app.utils.db_connection import SessionDep
 from app.utils.config import get_item_client
+from app.utils.config import get_address_client
 
 
 log = logging.getLogger(__name__)
@@ -87,7 +89,6 @@ async def create_item_for_me(
 )
 async def get_my_job_status(
         job_id: UUID,
-        # address_id: UUID,   # TODO: weird to include address_id here ...
         session: SessionDep,
         token: HTTPAuthorizationCredentials = Depends(security),
         client: Client = Depends(get_item_client)
@@ -163,14 +164,18 @@ async def list_my_items(
         raise HTTPException(status_code=401, detail="Invalid token")
 
 
-@item_user_router.patch("/me/items/{item_id}", response_model=ItemRead)
+@item_user_router.patch(
+    "/me/items/{item_id}",
+    response_model=ItemRead
+)
 async def update_my_item(
         item_id: UUID,
         payload: UpdateOwnItemReq,
         session: SessionDep,
         if_match: str = Header(..., alias="If-Match", description="ETag required for concurrent update protection"),
         token: HTTPAuthorizationCredentials = Depends(security),
-        client: Client = Depends(get_item_client),
+        item_client: Client = Depends(get_item_client),
+        address_client: Client = Depends(get_address_client)
 ):
     try:
         user_uuid = get_user_id_from_token(token.credentials)
@@ -192,7 +197,7 @@ async def update_my_item(
 
     response = await update_item_items_item_id_patch.asyncio(
         item_id=item_id,
-        client=client,
+        client=item_client,
         body=downstream_req,
         if_match=if_match
     )
@@ -208,7 +213,8 @@ async def update_my_item(
             detail=response.to_dict() if hasattr(response, "to_dict") else "Validation error"
         )
 
-    return ItemRead(**response.to_dict())
+    return await merge_item_with_address(response.item_uuid, address_client)
+
 
 @item_user_router.delete("/me/items/{item_id}")
 async def delete_my_item(
