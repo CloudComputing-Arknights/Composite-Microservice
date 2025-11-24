@@ -10,7 +10,8 @@ from app.client.item.item_api_client.api.items import (
     create_item_items_post,
     get_job_status_items_jobs_job_id_get,
     update_item_items_item_id_patch,
-    list_items_items_get
+    list_items_items_get,
+    delete_item_items_item_id_delete
 )
 
 from app.models.dto.item_user_dto import CreateOwnItemReq, UpdateOwnItemReq
@@ -21,7 +22,8 @@ from app.services.item_user_repository import (
     verify_item_ownership
 )
 from app.services.item_user_repository import (
-    get_user_items
+    get_user_items,
+    delete_item_user_relation
 )
 from app.services.item_service import merge_item_with_address
 from app.utils.auth import get_user_id_from_token
@@ -256,10 +258,32 @@ async def delete_my_item(
         item_id: str,
         session: SessionDep,
         token: HTTPAuthorizationCredentials = Depends(security),
+        client: Client = Depends(get_item_client)
 ):
     try:
         user_id = get_user_id_from_token(token.credentials)
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
+    try:
+        item_uuid = UUID(item_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid Item ID format")
 
-    pass
+    is_owner = await verify_item_ownership(session, item_id, user_id)
+    if not is_owner:
+        raise HTTPException(status_code=404, detail="Item not found or access denied")
+
+    # Delete item in MS first
+    response = await delete_item_items_item_id_delete.asyncio(
+        item_id=item_uuid,
+        client=client
+    )
+
+    if isinstance(response, HTTPValidationError):
+        log.error("Failed to delete item from downstream service.")
+        raise HTTPException(status_code=500, detail="Downstream service rejected deletion")
+
+    # If remote delete successfully, then delete local relationship
+    await delete_item_user_relation(session, item_id)
+
+    return
