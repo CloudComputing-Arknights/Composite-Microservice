@@ -33,8 +33,15 @@ async def get_item_owner(
 async def get_user_items(
         session: AsyncSession,
         user_id: str,
+        skip: int = 0,
+        limit: int = 10,
 ) -> list[str]:
-    statement = select(ItemUser).where(ItemUser.user_id == user_id)
+    statement = (
+        select(ItemUser)
+        .where(ItemUser.user_id == user_id)
+        .offset(skip)
+        .limit(limit)
+    )
     result = await session.exec(statement)
     item_users = result.all()
     return [item_user.item_id for item_user in item_users]
