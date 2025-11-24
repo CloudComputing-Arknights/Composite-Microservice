@@ -2,13 +2,15 @@ from fastapi import APIRouter, Request, Depends, Header, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from uuid import UUID
 import logging
+import asyncio
 
 from app.client.item.item_api_client.client import Client
 from app.client.item.item_api_client.models import HTTPValidationError
 from app.client.item.item_api_client.api.items import (
     create_item_items_post,
     get_job_status_items_jobs_job_id_get,
-    update_item_items_item_id_patch
+    update_item_items_item_id_patch,
+    list_items_items_get
 )
 
 from app.models.dto.item_user_dto import CreateOwnItemReq, UpdateOwnItemReq
@@ -156,12 +158,45 @@ async def list_my_items(
         session: SessionDep,
         skip: int = 0,
         limit: int = 10,
-        token: HTTPAuthorizationCredentials = Depends(security),
+        item_client = Depends(get_item_client),
+        address_client = Depends(get_address_client),
+        token: HTTPAuthorizationCredentials = Depends(security)
 ):
     try:
         user_uuid = get_user_id_from_token(token.credentials)
     except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
+
+    # Get all the item_ids for a user
+    item_ids_str = await get_user_items(session, user_id=user_uuid, skip=skip, limit=limit)
+
+    if not item_ids_str:
+        return []
+
+    try:
+        item_uuids = [UUID(i) for i in item_ids_str]
+    except ValueError:
+        raise HTTPException(status_code=500, detail="Database contained invalid UUID format")
+
+    response = await list_items_items_get.asyncio(
+        client=item_client,
+        id=item_uuids,
+    )
+
+    if response is None:
+        return []
+    elif isinstance(response, HTTPValidationError):
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to fetch item details for specific user from downstream service."
+        )
+
+    # Concurrent execution: request the URL for all items in the list at the same time.
+    result_items = await asyncio.gather(
+        *[merge_item_with_address(item, address_client) for item in response]
+    )
+
+    return result_items
 
 
 @item_user_router.patch(
