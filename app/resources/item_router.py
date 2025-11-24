@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, status, Query, Response
 from fastapi.exceptions import HTTPException
 from typing import List, Optional
 from uuid import UUID
+import asyncio
 
 from app.client.item.item_api_client.client import Client
 from app.client.item.item_api_client.api.items import (
@@ -10,13 +11,19 @@ from app.client.item.item_api_client.api.items import (
     get_item_items_item_id_get,
     list_categories_items_categories_get
 )
+from app.client.user.user_address_api_client.api.default import  get_address_addresses_address_id_get
 from app.client.item.item_api_client.models import HTTPValidationError
 from app.models.dto.item_dto import (
     ItemRead,
     CategoryRead,
     TransactionType
 )
+from app.models.dto.address_dto import (
+    AddressBase,
+    AddressDTO
+)
 from app.utils.config import get_item_client
+from app.utils.config import get_address_client
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +31,37 @@ item_router = APIRouter(
     prefix="/items",
     tags=["Items"]
 )
+
+
+async def merge_item_with_address(
+        item_obj,
+        address_client
+) -> ItemRead:
+    """
+    Insert address information into ItemRead
+    """
+    item_dict = item_obj.to_dict()
+    addr_id = item_dict.get("address_UUID")
+
+    if addr_id:
+        address_response = await get_address_addresses_address_id_get.asyncio(
+            address_id=UUID(str(addr_id)),
+            client=address_client
+        )
+
+        if isinstance(address_response, HTTPValidationError):
+            log.error(
+                "Downstream 'user service (address)' validation failed. Response: %s",
+                address_response.to_dict()
+            )
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An internal error occurred."
+            )
+        if address_response is not None:
+            item_dict["address"] = address_response.to_dict()
+
+    return ItemRead(**item_dict)
 
 
 @item_router.get(
@@ -44,14 +82,14 @@ async def list_public_items(
     search: Optional[str] = Query(None, description="Search by item title (case-insensitive, partial match)"),
     skip: int = Query(0, ge=0, description="Number of items to skip"),
     limit: int = Query(10, ge=1, le=100, description="Max number of items to return"),
-    client: Client = Depends(get_item_client)
+    client_item: Client = Depends(get_item_client),
+    client_address: Client = Depends(get_address_client)
 ):
     """
     Get items through pagination, can be filtered by ID, category, condition, transaction type
     """
-    print("in list_public_items")
-    response = await list_items_items_get.asyncio(
-        client=client,
+    item_response = await list_items_items_get.asyncio(
+        client=client_item,
         id=item_ids,
         category_id=category_id,
         # condition=condition,
@@ -61,22 +99,28 @@ async def list_public_items(
         limit=limit,
     )
 
-    if response is None:
+    if item_response is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Item service is unavailable."
         )
 
-    if isinstance(response, HTTPValidationError):
+    if isinstance(item_response, HTTPValidationError):
         log.error(
             "Downstream 'item service' validation failed. Response: %s",
-            response.to_dict()
+            item_response.to_dict()
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An internal error occurred."
         )
-    return [ItemRead(**item.to_dict()) for item in response]
+
+    # Concurrent execution: request the URL for all items in the list at the same time.
+    result_items = await asyncio.gather(
+        *[merge_item_with_address(item, client_address) for item in item_response]
+    )
+
+    return result_items
 
 
 @item_router.get(
