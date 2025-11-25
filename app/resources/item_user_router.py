@@ -25,7 +25,7 @@ from app.services.item_user_repository import (
     get_user_items,
     delete_item_user_relation
 )
-from app.services.item_service import merge_item_with_address
+from app.services.item_service import complete_item
 from app.utils.auth import get_user_id_from_token
 from app.utils.db_connection import SessionDep
 from app.utils.config import get_item_client
@@ -195,7 +195,7 @@ async def list_my_items(
 
     # Concurrent execution: request the URL for all items in the list at the same time.
     result_items = await asyncio.gather(
-        *[merge_item_with_address(item, address_client) for item in response]
+        *[complete_item(item, UUID(user_uuid), address_client) for item in response]
     )
 
     return result_items
@@ -212,7 +212,7 @@ async def update_my_item(
         if_match: str = Header(..., alias="If-Match", description="ETag required for concurrent update protection"),
         token: HTTPAuthorizationCredentials = Depends(security),
         item_client: Client = Depends(get_item_client),
-        address_client: Client = Depends(get_address_client)
+        user_client: Client = Depends(get_address_client)
 ):
     try:
         user_uuid = get_user_id_from_token(token.credentials)
@@ -250,7 +250,7 @@ async def update_my_item(
             detail=response.to_dict() if hasattr(response, "to_dict") else "Validation error"
         )
 
-    return await merge_item_with_address(response.item_uuid, address_client)
+    return await complete_item(response, UUID(user_uuid), user_client)
 
 
 @item_user_router.delete("/me/items/{item_id}")
