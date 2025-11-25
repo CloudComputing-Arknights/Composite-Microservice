@@ -17,9 +17,11 @@ from app.models.dto.item_dto import (
     CategoryRead,
     TransactionType
 )
-from app.utils.config import get_item_client
-from app.utils.config import get_address_client
-from app.services.item_service import merge_item_with_address
+from app.utils.config import get_item_client, get_user_client
+from app.utils.db_connection import SessionDep
+from app.services.item_service import complete_item
+from app.services.item_user_repository import get_item_owners_batch, get_item_owner
+
 
 log = logging.getLogger(__name__)
 
@@ -35,6 +37,7 @@ item_router = APIRouter(
     summary="Get all items through pagination.",
 )
 async def list_public_items(
+    session: SessionDep,
     item_ids: Optional[List[UUID]] = Query(
         None, alias="id", description="Filter by a list of item IDs"
     ),
@@ -48,7 +51,7 @@ async def list_public_items(
     skip: int = Query(0, ge=0, description="Number of items to skip"),
     limit: int = Query(10, ge=1, le=100, description="Max number of items to return"),
     client_item: Client = Depends(get_item_client),
-    client_address: Client = Depends(get_address_client)
+    client_user: Client = Depends(get_user_client)
 ):
     """
     Get items through pagination, can be filtered by ID, category, condition, transaction type
@@ -80,10 +83,21 @@ async def list_public_items(
             detail="An internal error occurred."
         )
 
+    item_ids = [item.item_uuid for item in item_response]
+    owners_map = await get_item_owners_batch(session, [str(i_id) for i_id in item_ids])
+
     # Concurrent execution: request the URL for all items in the list at the same time.
-    result_items = await asyncio.gather(
-        *[merge_item_with_address(item, client_address) for item in item_response]
-    )
+    tasks = []
+    for item in item_response:
+        print("uuid:", item.item_uuid)
+        raw_user_id = owners_map.get(str(item.item_uuid))
+        if raw_user_id:
+            u_id = UUID(str(raw_user_id))
+        else:
+            u_id = None
+        tasks.append(complete_item(item, u_id, client_user))
+
+    result_items = await asyncio.gather(*tasks)
 
     return result_items
 
@@ -113,8 +127,9 @@ async def list_categories(
 async def get_public_item_by_id(
     item_id: UUID,
     response: Response,
+    session: SessionDep,
     item_client: Client = Depends(get_item_client),
-    address_client: Client = Depends(get_address_client)
+    user_client: Client = Depends(get_user_client)
 ):
     """
     Get an item by its id
@@ -141,7 +156,9 @@ async def get_public_item_by_id(
             detail="An internal error occurred."
         )
 
+    user_id = await get_item_owner(session, str(item_response.item_uuid))
+
     etag_value = item_response.updated_at.isoformat()    # timestamp -> ISO string
     response.headers["ETag"] = f'"{etag_value}"'
 
-    return await merge_item_with_address(item_response, address_client)
+    return await complete_item(item_response, user_id, user_client)
