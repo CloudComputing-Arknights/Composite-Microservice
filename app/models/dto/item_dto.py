@@ -6,6 +6,8 @@ from uuid import UUID
 from pydantic import BaseModel, Field, ConfigDict
 from enum import Enum
 
+from app.models.dto.address_dto import AddressBase
+from app.models.dto.user_dto import PublicUserRes
 from app.client.item.item_api_client.models.item_create import ItemCreate as ClientItemCreate
 from app.client.item.item_api_client.models.item_update import ItemUpdate as ClientItemUpdate
 from app.client.item.item_api_client.types import UNSET
@@ -61,6 +63,9 @@ class ItemRead(ItemBase):
 
     item_UUID: UUID
     categories: Optional[List[CategoryRead]] = Field(default=None)
+    address: Optional[AddressBase] = None
+    user: PublicUserRes = None
+
     created_at: Optional[datetime.datetime] = None
     updated_at: Optional[datetime.datetime] = None
 

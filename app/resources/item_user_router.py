@@ -1,14 +1,18 @@
 from fastapi import APIRouter, Request, Depends, Header, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from uuid import UUID
 import logging
+import asyncio
+
+from fastapi.security import HTTPBearer
 
 from app.client.item.item_api_client.client import Client
 from app.client.item.item_api_client.models import HTTPValidationError
 from app.client.item.item_api_client.api.items import (
     create_item_items_post,
     get_job_status_items_jobs_job_id_get,
-    update_item_items_item_id_patch
+    update_item_items_item_id_patch,
+    list_items_items_get,
+    delete_item_items_item_id_delete
 )
 
 from app.models.dto.item_user_dto import CreateOwnItemReq, UpdateOwnItemReq
@@ -19,19 +23,22 @@ from app.services.item_user_repository import (
     verify_item_ownership
 )
 from app.services.item_user_repository import (
-    get_user_items
+    get_user_items,
+    delete_item_user_relation
 )
-from app.utils.auth import get_user_id_from_token
+from app.services.item_service import complete_item
 from app.utils.db_connection import SessionDep
 from app.utils.config import get_item_client
+from app.utils.config import get_address_client
 
 
 log = logging.getLogger(__name__)
+security = HTTPBearer(auto_error=False)
 item_user_router = APIRouter(
-    tags=["Item User"]
+    tags=["Item User"],
+    dependencies=[Depends(security)],
 )
 
-security = HTTPBearer()
 
 @item_user_router.post(
     "/me/items",
@@ -40,13 +47,10 @@ security = HTTPBearer()
 )
 async def create_item_for_me(
         payload: CreateOwnItemReq,
-        token: HTTPAuthorizationCredentials = Depends(security),
+        request: Request,
         client: Client = Depends(get_item_client)
 ):
-    try:
-        user_uuid = get_user_id_from_token(token.credentials)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = request.state.user_id
 
     # downstream_req = ItemCreate(**payload.model_dump(exclude={"address_UUID"}))
     downstream_req = ItemCreate(**payload.model_dump())
@@ -87,15 +91,11 @@ async def create_item_for_me(
 )
 async def get_my_job_status(
         job_id: UUID,
-        # address_id: UUID,   # TODO: weird to include address_id here ...
         session: SessionDep,
-        token: HTTPAuthorizationCredentials = Depends(security),
+        request: Request,
         client: Client = Depends(get_item_client)
 ):
-    try:
-        user_uuid = get_user_id_from_token(token.credentials)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = request.state.user_id
 
     # Request for job
     downstream_response = await get_job_status_items_jobs_job_id_get.asyncio(
@@ -117,7 +117,7 @@ async def get_my_job_status(
     # Store item-user relation if it's COMPLETED.
     if downstream_response.status == JobStatus.COMPLETED and downstream_response.item_uuid:
         item_id_str = str(downstream_response.item_uuid)
-        user_id_str = str(user_uuid)
+        user_id_str = str(user_id)
         # address_id_str = str(address_id)
 
         # [Idempotence Check] Check whether the relationship already exists
@@ -155,32 +155,62 @@ async def list_my_items(
         session: SessionDep,
         skip: int = 0,
         limit: int = 10,
-        token: HTTPAuthorizationCredentials = Depends(security),
+        item_client = Depends(get_item_client),
+        address_client = Depends(get_address_client),
 ):
+    user_id = request.state.user_id
+
+    # Get all the item_ids for a user
+    item_ids_str = await get_user_items(session, user_id=user_id, skip=skip, limit=limit)
+
+    if not item_ids_str:
+        return []
+
     try:
-        user_uuid = get_user_id_from_token(token.credentials)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        item_uuids = [UUID(i) for i in item_ids_str]
+    except ValueError:
+        raise HTTPException(status_code=500, detail="Database contained invalid UUID format")
+
+    response = await list_items_items_get.asyncio(
+        client=item_client,
+        id=item_uuids,
+    )
+
+    if response is None:
+        return []
+    elif isinstance(response, HTTPValidationError):
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to fetch item details for specific user from downstream service."
+        )
+
+    # Concurrent execution: request the URL for all items in the list at the same time.
+    result_items = await asyncio.gather(
+        *[complete_item(item, UUID(user_id), address_client) for item in response]
+    )
+
+    return result_items
 
 
-@item_user_router.patch("/me/items/{item_id}", response_model=ItemRead)
+@item_user_router.patch(
+    "/me/items/{item_id}",
+    response_model=ItemRead
+)
 async def update_my_item(
         item_id: UUID,
         payload: UpdateOwnItemReq,
         session: SessionDep,
+        request: Request,
         if_match: str = Header(..., alias="If-Match", description="ETag required for concurrent update protection"),
-        token: HTTPAuthorizationCredentials = Depends(security),
-        client: Client = Depends(get_item_client),
+        item_client: Client = Depends(get_item_client),
+        user_client: Client = Depends(get_address_client)
 ):
-    try:
-        user_uuid = get_user_id_from_token(token.credentials)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = request.state.user_id
 
     is_owned = await verify_item_ownership(
         session=session,
         item_id=str(item_id),
-        user_id=str(user_uuid)
+        user_id=str(user_id)
     )
 
     if not is_owned:
@@ -188,11 +218,9 @@ async def update_my_item(
 
     downstream_req = ItemUpdate(**payload.model_dump(exclude_unset=True)).to_client_model()
 
-    print(downstream_req.to_dict())
-
     response = await update_item_items_item_id_patch.asyncio(
         item_id=item_id,
-        client=client,
+        client=item_client,
         body=downstream_req,
         if_match=if_match
     )
@@ -208,17 +236,37 @@ async def update_my_item(
             detail=response.to_dict() if hasattr(response, "to_dict") else "Validation error"
         )
 
-    return ItemRead(**response.to_dict())
+    return await complete_item(response, UUID(user_id), user_client)
+
 
 @item_user_router.delete("/me/items/{item_id}")
 async def delete_my_item(
         item_id: str,
         session: SessionDep,
-        token: HTTPAuthorizationCredentials = Depends(security),
+        request: Request,
+        client: Client = Depends(get_item_client)
 ):
+    user_id = request.state.user_id
     try:
-        user_id = get_user_id_from_token(token.credentials)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        item_uuid = UUID(item_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid Item ID format")
 
-    pass
+    is_owner = await verify_item_ownership(session, item_id, user_id)
+    if not is_owner:
+        raise HTTPException(status_code=404, detail="Item not found or access denied")
+
+    # Delete item in MS first
+    response = await delete_item_items_item_id_delete.asyncio(
+        item_id=item_uuid,
+        client=client
+    )
+
+    if isinstance(response, HTTPValidationError):
+        log.error("Failed to delete item from downstream service.")
+        raise HTTPException(status_code=500, detail="Downstream service rejected deletion")
+
+    # If remote delete successfully, then delete local relationship
+    await delete_item_user_relation(session, item_id)
+
+    return

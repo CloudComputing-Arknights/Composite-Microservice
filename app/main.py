@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -13,22 +14,20 @@ from app.resources.root_router import root_router
 from app.resources.transaction_router import transaction_router
 from app.resources.transaction_user_item_router import transaction_user_item_router
 from app.resources.user_router import user_router
-from app.resources.thread_user_router import router as messaging_thread_user_router
-from app.resources.thread_router import router as messaging_thread_router
-
 
 from app.utils.config import init_env
 from app.utils.db_connection import create_db_and_tables, close_db_connection
 
 from fastapi.middleware.cors import CORSMiddleware
+from app.middleware.auth_middleware import AuthMiddleware
 
 # Table Models (Necessary)
 from app.models.po.address_user_po import AddressUser
 from app.models.po.item_address_po import ItemAddress
 from app.models.po.item_user_po import ItemUser
 from app.models.po.transaction_user_item_po import TransactionUserItem
-from app.models.po.thread_user_po import ThreadUser
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # -----------------------------------------------------------------------------
 # Environments and Clients
@@ -65,11 +64,17 @@ app = FastAPI(
 )
 
 app.add_middleware(
+    AuthMiddleware,
+    protected_prefixes=("/me/", "/transactions"),
+)
+
+app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["ETag"]
 )
 
 # -----------------------------------------------------------------------------
@@ -84,5 +89,3 @@ app.include_router(root_router)
 app.include_router(transaction_router)
 app.include_router(transaction_user_item_router)
 app.include_router(user_router)
-app.include_router(messaging_thread_user_router)
-app.include_router(messaging_thread_router)
