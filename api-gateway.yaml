@@ -1,0 +1,70 @@
+swagger: '2.0'
+info:
+  title: Composite API Gateway
+  description: A simple gateway for monitoring Composite API
+  version: 1.0.0
+schemes:
+  - https
+produces:
+  - application/json
+paths:
+  /{path=**}:
+    parameters:
+      - name: path
+        in: path
+        required: true
+        type: string
+    get:
+      description: Catch-all for GET
+      operationId: catchAllGet
+      x-google-backend:
+        address: https://composite-microservice-191058157831.us-west2.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '200':
+          description: Successful response
+    post:
+      description: Catch-all for POST
+      operationId: catchAllPost
+      x-google-backend:
+        address: https://composite-microservice-191058157831.us-west2.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '200':
+          description: Successful response
+    put:
+      description: Catch-all for PUT
+      operationId: catchAllPut
+      x-google-backend:
+        address: https://composite-microservice-191058157831.us-west2.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '200':
+          description: Successful response
+    delete:
+      description: Catch-all for DELETE
+      operationId: catchAllDelete
+      x-google-backend:
+        address: https://composite-microservice-191058157831.us-west2.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '200':
+          description: Successful response
+    patch:
+      description: Catch-all for PATCH
+      operationId: catchAllPatch
+      x-google-backend:
+        address: https://composite-microservice-191058157831.us-west2.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '200':
+          description: Successful response
+    options:
+      description: Catch-all for OPTIONS
+      operationId: catchAllOptions
+      x-google-backend:
+        address: https://composite-microservice-191058157831.us-west2.run.app
+        path_translation: APPEND_PATH_TO_ADDRESS
+      responses:
+        '200':
+          description: Successful response
