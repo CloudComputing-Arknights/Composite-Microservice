@@ -46,6 +46,11 @@ class UpdateProfileReq(BaseModel):
     avatar_url: Optional[str] = None
     birth_date: Optional[date] = None
 
+class GoogleLoginReq(BaseModel):
+    id_token: str = Field(
+        ...,
+        description="Google ID token returned by Google login"
+    )
 
 class PublicUserRes(BaseModel):
     """Public user information (safe to expose)"""

@@ -95,7 +95,7 @@ app.add_middleware(CorrelationIdMiddleware)
 
 app.add_middleware(
     AuthMiddleware,
-    protected_prefixes=("/me/", "/transactions/"),
+    protected_prefixes=("/me/", "/transactions"),
 )
 
 app.add_middleware(

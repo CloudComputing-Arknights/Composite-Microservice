@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Header, status, Depends, Request
 from typing import Optional, Literal
 import asyncio
+import logging
 
 from fastapi.security import HTTPBearer
 
@@ -40,6 +41,7 @@ from app.client.transaction.transaction_api_client.models.list_transactions_tran
 )
 
 
+log = logging.getLogger(__name__)
 security = HTTPBearer(auto_error=False)
 transaction_user_item_router = APIRouter(
     tags=["Transaction User Item"],
@@ -55,6 +57,7 @@ async def create_transaction(
     x_idempotency_key: Optional[str] = Header(None, alias="X-Idempotency-Key")
 ):
     user_id = request.state.user_id
+    log.info(f"User {user_id} creating transaction: type={payload.type}, receiver={payload.receiver_user_id}")
     
     try:
         transaction_req = NewTransactionRequest(
@@ -77,6 +80,7 @@ async def create_transaction(
         )
 
         if not transaction_result:
+            log.error(f"Failed to create transaction in microservice for user {user_id}")
             raise HTTPException(status_code=500, detail="Failed to create transaction in microservice")
         
         # Create local relation: current user is the initiator
@@ -89,6 +93,8 @@ async def create_transaction(
             offered_item_id=payload.offered_item_id,
         )
         
+        log.info(f"Transaction {transaction_result.transaction_id} created successfully by user {user_id}")
+        
         return TransactionRes(
             transaction_id=transaction_result.transaction_id,
             requested_item_id=relation.requested_item_id,
@@ -106,6 +112,7 @@ async def create_transaction(
     except HTTPException:
         raise
     except Exception as e:
+        log.error(f"Error creating transaction for user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error creating transaction: {str(e)}")
 
 
@@ -116,6 +123,7 @@ async def get_transaction(
     request: Request,
 ):
     user_id = request.state.user_id
+    log.info(f"User {user_id} fetching transaction {transaction_id}")
     
     try:
         # Parallel execution: fetch from microservice and local DB simultaneously
@@ -128,10 +136,14 @@ async def get_transaction(
         )
         
         if not transaction_result:
+            log.warning(f"Transaction {transaction_id} not found in microservice")
             raise HTTPException(status_code=404, detail="Transaction not found")
 
         if user_id not in [relation.initiator_user_id, relation.receiver_user_id]:
+            log.warning(f"User {user_id} unauthorized to access transaction {transaction_id}")
             raise HTTPException(status_code=404, detail="Transaction not found")
+        
+        log.info(f"Transaction {transaction_id} retrieved successfully by user {user_id}")
         
         return TransactionRes(
             transaction_id=transaction_result.transaction_id,
@@ -150,6 +162,7 @@ async def get_transaction(
     except HTTPException:
         raise
     except Exception as e:
+        log.error(f"Error fetching transaction {transaction_id} for user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -164,6 +177,7 @@ async def list_transactions(
     offset: int = 0,
 ):
     user_id = request.state.user_id
+    log.info(f"User {user_id} listing transactions: status={status_param}, type={type}, limit={limit}, offset={offset}")
     
     try:
         # Prepare query parameters for downstream service
@@ -193,6 +207,7 @@ async def list_transactions(
         relation_map = {r.transaction_id: r for r in relations}
         
         if not transactions_result:
+            log.info(f"No transactions found for user {user_id}")
             return []
         
         # Combine results: only include transactions where user is a participant
@@ -216,9 +231,12 @@ async def list_transactions(
                 updated_at=trans.updated_at,
             ))
         
+        log.info(f"Retrieved {len(combined_results)} transactions for user {user_id}")
+        
         return combined_results
         
     except Exception as e:
+        log.error(f"Error listing transactions for user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -230,24 +248,28 @@ async def update_transaction(
     request: Request,
 ):
     user_id = request.state.user_id
+    log.info(f"User {user_id} updating transaction {transaction_id} to status: {payload.status}")
     
     try:
         relation = await get_transaction_relation(session, transaction_id)
         
         # Verify user is a participant (initiator or receiver)
         if user_id not in [relation.initiator_user_id, relation.receiver_user_id]:
+            log.warning(f"User {user_id} unauthorized to update transaction {transaction_id}")
             raise HTTPException(status_code=404, detail="Transaction not found")
         
         # Permission checks: only initiator can cancel
         if payload.status == "canceled":
             is_initiator = await verify_transaction_initiator(session, transaction_id, user_id)
             if not is_initiator:
+                log.warning(f"User {user_id} attempted to cancel transaction {transaction_id} but is not initiator")
                 raise HTTPException(status_code=403, detail="Only initiator can cancel the transaction")
         
         # Permission checks: only receiver can accept or reject
         elif payload.status in ["accepted", "rejected"]:
             is_receiver = await verify_transaction_receiver(session, transaction_id, user_id)
             if not is_receiver:
+                log.warning(f"User {user_id} attempted to {payload.status} transaction {transaction_id} but is not receiver")
                 raise HTTPException(status_code=403, detail="Only receiver can accept or reject the transaction")
         
         update_req = UpdateStatusRequest(
@@ -261,7 +283,10 @@ async def update_transaction(
         )
         
         if not transaction_result:
+            log.error(f"Transaction {transaction_id} not found in microservice")
             raise HTTPException(status_code=404, detail="Transaction not found")
+        
+        log.info(f"Transaction {transaction_id} updated successfully to status: {payload.status} by user {user_id}")
         
         return TransactionRes(
             transaction_id=transaction_result.transaction_id,
@@ -280,6 +305,7 @@ async def update_transaction(
     except HTTPException:
         raise
     except Exception as e:
+        log.error(f"Error updating transaction {transaction_id} for user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -290,6 +316,7 @@ async def delete_transaction(
     request: Request,
 ):
     user_id = request.state.user_id
+    log.info(f"User {user_id} attempting to delete transaction {transaction_id}")
     
     try:
         # Parallel execution: fetch transaction, relation, and verify permission simultaneously
@@ -303,10 +330,12 @@ async def delete_transaction(
         )
         
         if not transaction_result:
+            log.warning(f"Transaction {transaction_id} not found in microservice")
             raise HTTPException(status_code=404, detail="Transaction not found")
         
         # Permission check: only initiator can delete
         if not is_initiator:
+            log.warning(f"User {user_id} attempted to delete transaction {transaction_id} but is not initiator")
             raise HTTPException(status_code=403, detail="Only initiator can delete the transaction")
         
         return_data = TransactionRes(
@@ -330,9 +359,12 @@ async def delete_transaction(
             transaction_id=transaction_id
         )
         
+        log.info(f"Transaction {transaction_id} deleted successfully by user {user_id}")
+        
         return return_data
         
     except HTTPException:
         raise
     except Exception as e:
+        log.error(f"Error deleting transaction {transaction_id} for user {user_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
