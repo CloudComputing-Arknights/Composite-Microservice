@@ -19,6 +19,7 @@ from app.utils.config import init_env
 from app.utils.db_connection import create_db_and_tables, close_db_connection
 
 from fastapi.middleware.cors import CORSMiddleware
+from app.middleware.auth_middleware import AuthMiddleware
 
 # Table Models (Necessary)
 from app.models.po.address_user_po import AddressUser
@@ -60,6 +61,11 @@ app = FastAPI(
     description="An API to orchestrate calls to other microservices.",
     version="1.0.0",
     lifespan=lifespan,
+)
+
+app.add_middleware(
+    AuthMiddleware,
+    protected_prefixes=("/me/", "/transactions/"),
 )
 
 app.add_middleware(

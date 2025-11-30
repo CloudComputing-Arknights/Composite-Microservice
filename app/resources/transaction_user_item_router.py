@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, Header, status, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import APIRouter, HTTPException, Header, status, Depends, Request
 from typing import Optional, Literal
 import asyncio
+
+from fastapi.security import HTTPBearer
 
 from app.models.dto.transaction_user_item_dto import (
     CreateTransactionReq,
@@ -18,7 +19,6 @@ from app.services.transaction_user_item_repository import (
 )
 from app.utils.db_connection import SessionDep
 from app.utils.config import get_transaction_client
-from app.utils.auth import get_user_id_from_token
 
 from app.client.transaction.transaction_api_client.api.default import (
     create_transaction_transactions_transaction_post,
@@ -39,25 +39,22 @@ from app.client.transaction.transaction_api_client.models.list_transactions_tran
     ListTransactionsTransactionsGetTypeType0
 )
 
-transaction_user_item_router = APIRouter(
-    tags=["Transaction User Item"]
-)
 
-security = HTTPBearer()
+security = HTTPBearer(auto_error=False)
+transaction_user_item_router = APIRouter(
+    tags=["Transaction User Item"],
+    dependencies=[Depends(security)],
+)
 
 
 @transaction_user_item_router.post("/transactions/transaction", response_model=TransactionRes, status_code=status.HTTP_201_CREATED)
 async def create_transaction(
     payload: CreateTransactionReq,
     session: SessionDep,
-    token: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
     x_idempotency_key: Optional[str] = Header(None, alias="X-Idempotency-Key")
 ):
-    """Create a new transaction."""
-    try:
-        user_uuid = get_user_id_from_token(token.credentials)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = request.state.user_id
     
     try:
         transaction_req = NewTransactionRequest(
@@ -86,7 +83,7 @@ async def create_transaction(
         relation = await create_transaction_user_item_relation(
             session=session,
             transaction_id=transaction_result.transaction_id,
-            initiator_user_id=str(user_uuid),
+            initiator_user_id=str(user_id),
             receiver_user_id=payload.receiver_user_id,
             requested_item_id=payload.requested_item_id,
             offered_item_id=payload.offered_item_id,
@@ -116,13 +113,9 @@ async def create_transaction(
 async def get_transaction(
     transaction_id: str,
     session: SessionDep,
-    token: HTTPAuthorizationCredentials = Depends(security)
+    request: Request,
 ):
-    """Get a transaction by ID."""
-    try:
-        user_uuid = get_user_id_from_token(token.credentials)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = request.state.user_id
     
     try:
         # Parallel execution: fetch from microservice and local DB simultaneously
@@ -136,10 +129,8 @@ async def get_transaction(
         
         if not transaction_result:
             raise HTTPException(status_code=404, detail="Transaction not found")
-        
-        # Verify user is a participant (initiator or receiver)
-        user_id_str = str(user_uuid)
-        if user_id_str not in [relation.initiator_user_id, relation.receiver_user_id]:
+
+        if user_id not in [relation.initiator_user_id, relation.receiver_user_id]:
             raise HTTPException(status_code=404, detail="Transaction not found")
         
         return TransactionRes(
@@ -165,22 +156,16 @@ async def get_transaction(
 @transaction_user_item_router.get("/transactions", response_model=list[TransactionRes])
 async def list_transactions(
     session: SessionDep,
-    token: HTTPAuthorizationCredentials = Depends(security),
+    request: Request,
     status_param: Optional[Literal["pending", "accepted", "rejected", "canceled", "completed"]] = None,
     requested_item_id: Optional[str] = None,
     type: Optional[Literal["trade", "purchase"]] = None,
     limit: int = 50,
     offset: int = 0,
 ):
-    """List all transactions for the current user."""
-    try:
-        user_uuid = get_user_id_from_token(token.credentials)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = request.state.user_id
     
     try:
-        user_id_str = str(user_uuid)
-        
         # Prepare query parameters for downstream service
         status_param_client = None
         if status_param:
@@ -192,7 +177,7 @@ async def list_transactions(
         
         # Parallel execution: fetch user relations and downstream transactions simultaneously
         relations, transactions_result = await asyncio.gather(
-            get_user_transactions(session, user_id_str),
+            get_user_transactions(session, user_id),
             list_transactions_transactions_get.asyncio(
                 client=get_transaction_client(),
                 status_param=status_param_client,
@@ -242,32 +227,26 @@ async def update_transaction(
     transaction_id: str,
     payload: UpdateTransactionStatusReq,
     session: SessionDep,
-    token: HTTPAuthorizationCredentials = Depends(security)
+    request: Request,
 ):
-    """Update a transaction's status."""
-    try:
-        user_uuid = get_user_id_from_token(token.credentials)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = request.state.user_id
     
     try:
-        user_id_str = str(user_uuid)
-        
         relation = await get_transaction_relation(session, transaction_id)
         
         # Verify user is a participant (initiator or receiver)
-        if user_id_str not in [relation.initiator_user_id, relation.receiver_user_id]:
+        if user_id not in [relation.initiator_user_id, relation.receiver_user_id]:
             raise HTTPException(status_code=404, detail="Transaction not found")
         
         # Permission checks: only initiator can cancel
         if payload.status == "canceled":
-            is_initiator = await verify_transaction_initiator(session, transaction_id, user_id_str)
+            is_initiator = await verify_transaction_initiator(session, transaction_id, user_id)
             if not is_initiator:
                 raise HTTPException(status_code=403, detail="Only initiator can cancel the transaction")
         
         # Permission checks: only receiver can accept or reject
         elif payload.status in ["accepted", "rejected"]:
-            is_receiver = await verify_transaction_receiver(session, transaction_id, user_id_str)
+            is_receiver = await verify_transaction_receiver(session, transaction_id, user_id)
             if not is_receiver:
                 raise HTTPException(status_code=403, detail="Only receiver can accept or reject the transaction")
         
@@ -308,17 +287,11 @@ async def update_transaction(
 async def delete_transaction(
     transaction_id: str,
     session: SessionDep,
-    token: HTTPAuthorizationCredentials = Depends(security)
+    request: Request,
 ):
-    """Delete a transaction."""
-    try:
-        user_uuid = get_user_id_from_token(token.credentials)
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = request.state.user_id
     
     try:
-        user_id_str = str(user_uuid)
-        
         # Parallel execution: fetch transaction, relation, and verify permission simultaneously
         transaction_result, relation, is_initiator = await asyncio.gather(
             get_transaction_transactions_transaction_id_get.asyncio(
@@ -326,7 +299,7 @@ async def delete_transaction(
                 transaction_id=transaction_id
             ),
             get_transaction_relation(session, transaction_id),
-            verify_transaction_initiator(session, transaction_id, user_id_str)
+            verify_transaction_initiator(session, transaction_id, user_id)
         )
         
         if not transaction_result:

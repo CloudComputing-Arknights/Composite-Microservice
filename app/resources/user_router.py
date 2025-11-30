@@ -1,13 +1,18 @@
+import json
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel.ext.asyncio.session import AsyncSession
+from starlette.requests import Request
 
 from app.client.user.user_address_api_client.api.default.update_user_users_user_id_put import asyncio as update_user_async
 from app.client.user.user_address_api_client.models.user_update import UserUpdate
 
 from app.client.user.user_address_api_client.api.default.login_auth_token_post import asyncio as user_login_async
+from app.client.user.user_address_api_client.api.default.login_auth_token_post import (
+    asyncio_detailed as user_login_detailed
+)
 from app.client.user.user_address_api_client.api.default.get_user_users_user_id_get import (
     asyncio as get_user_async,
 )
@@ -37,33 +42,38 @@ from app.models.dto.user_dto import (
 from app.models.dto.address_dto import AddressDTO
 
 from app.services.address_user_repository import get_user_addresses
-from app.utils.auth import get_user_id_from_token
 from app.utils.config import get_user_client, get_address_client
 from app.utils.db_connection import get_session
 
+
+security = HTTPBearer(auto_error=False)
 user_router = APIRouter(
-    tags=["User"]
+    tags=["User"],
+    dependencies=[Depends(security)],
 )
 
-security = HTTPBearer()
 
 @user_router.post("/token", response_model=SignInRes)
 async def sign_in(payload: SignInReq):
     body = BodyLoginAuthTokenPost(username=payload.username, password=payload.password)
 
-    result = await user_login_async(client=get_user_client(), body=body)
+    response = await user_login_detailed(client=get_user_client(), body=body)
 
-    if result is None:
-        raise HTTPException(status_code=500)
+    if response.status_code == 200:
+        token: Token = response.parsed
+        token_type = token.token_type if token.token_type is not UNSET else "bearer"
+        return SignInRes(access_token=token.access_token, token_type=token_type)
 
-    if isinstance(result, HTTPValidationError):
-        raise HTTPException(status_code=401)
+    try:
+        error_data = json.loads(response.content)
+        error_detail = error_data.get("detail", error_data) if isinstance(error_data, dict) else error_data
+    except Exception:
+        error_detail = response.content.decode("utf-8") if response.content else "Unknown downstream error"
 
-    token: Token = result
-    token_type = token.token_type if token.token_type is not UNSET else "bearer"
-
-    return SignInRes(access_token=token.access_token, token_type=token_type)
-
+    raise HTTPException(
+        status_code=response.status_code,
+        detail=error_detail
+    )
 
 @user_router.post("/users", status_code=201, response_model=SignedInUserRes)
 async def create_user(payload: SignUpReq):
@@ -134,14 +144,10 @@ async def get_user_by_id(user_id: UUID):
 
 @user_router.get("/me/user", response_model=SignedInUserRes)
 async def auth_me(
+        request: Request,
         session: AsyncSession = Depends(get_session),
-        token: HTTPAuthorizationCredentials = Depends(security),
 ):
-    try:
-        user_id = get_user_id_from_token(token.credentials)
-        user_id = UUID(str(user_id))
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    user_id = request.state.user_id
 
     result = await get_user_async(user_id=user_id, client=get_user_client())
 
@@ -197,16 +203,10 @@ async def auth_me(
 
 @user_router.put("/me/user", response_model=SignedInUserRes)
 async def update_me(
+    request: Request,
     payload: UpdateProfileReq,
-    token: HTTPAuthorizationCredentials = Depends(security),
 ):
-    # 1. Verify Token
-    try:
-        token_str = token.credentials 
-        user_id = get_user_id_from_token(token_str)
-        user_uuid = UUID(str(user_id))
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid Token")
+    user_id = request.state.user_id
 
     # 2. Prepare Data for Downstream Service
     user_update = UserUpdate(
@@ -219,7 +219,7 @@ async def update_me(
     # 3. Call Downstream Update Endpoint
     result = await update_user_async(
         client=get_user_client(),
-        user_id=user_uuid,
+        user_id=user_id,
         body=user_update
     )
 
