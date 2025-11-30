@@ -1,36 +1,50 @@
 from http import HTTPStatus
-from typing import Any
+from typing import Any, cast
 
 import httpx
 
-from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...types import Response, UNSET
+from ... import errors
+
 from ...models.http_validation_error import HTTPValidationError
 from ...models.thread_read import ThreadRead
-from ...types import Response
+from typing import cast
+
 
 
 def _get_kwargs(
     thread_id: str,
+
 ) -> dict[str, Any]:
+    
+
+    
+
+    
+
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": f"/threads/{thread_id}",
+        "url": "/threads/{thread_id}".format(thread_id=thread_id,),
     }
+
 
     return _kwargs
 
 
-def _parse_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> HTTPValidationError | ThreadRead | None:
+
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> HTTPValidationError | ThreadRead | None:
     if response.status_code == 200:
         response_200 = ThreadRead.from_dict(response.json())
+
+
 
         return response_200
 
     if response.status_code == 422:
         response_422 = HTTPValidationError.from_dict(response.json())
+
+
 
         return response_422
 
@@ -40,9 +54,7 @@ def _parse_response(
         return None
 
 
-def _build_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[HTTPValidationError | ThreadRead]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[HTTPValidationError | ThreadRead]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -55,8 +67,9 @@ def sync_detailed(
     thread_id: str,
     *,
     client: AuthenticatedClient | Client,
+
 ) -> Response[HTTPValidationError | ThreadRead]:
-    """Get Thread
+    """ Get Thread
 
     Args:
         thread_id (str):
@@ -67,10 +80,12 @@ def sync_detailed(
 
     Returns:
         Response[HTTPValidationError | ThreadRead]
-    """
+     """
+
 
     kwargs = _get_kwargs(
         thread_id=thread_id,
+
     )
 
     response = client.get_httpx_client().request(
@@ -79,13 +94,13 @@ def sync_detailed(
 
     return _build_response(client=client, response=response)
 
-
 def sync(
     thread_id: str,
     *,
     client: AuthenticatedClient | Client,
+
 ) -> HTTPValidationError | ThreadRead | None:
-    """Get Thread
+    """ Get Thread
 
     Args:
         thread_id (str):
@@ -96,20 +111,22 @@ def sync(
 
     Returns:
         HTTPValidationError | ThreadRead
-    """
+     """
+
 
     return sync_detailed(
         thread_id=thread_id,
-        client=client,
-    ).parsed
+client=client,
 
+    ).parsed
 
 async def asyncio_detailed(
     thread_id: str,
     *,
     client: AuthenticatedClient | Client,
+
 ) -> Response[HTTPValidationError | ThreadRead]:
-    """Get Thread
+    """ Get Thread
 
     Args:
         thread_id (str):
@@ -120,23 +137,27 @@ async def asyncio_detailed(
 
     Returns:
         Response[HTTPValidationError | ThreadRead]
-    """
+     """
+
 
     kwargs = _get_kwargs(
         thread_id=thread_id,
+
     )
 
-    response = await client.get_async_httpx_client().request(**kwargs)
+    response = await client.get_async_httpx_client().request(
+        **kwargs
+    )
 
     return _build_response(client=client, response=response)
-
 
 async def asyncio(
     thread_id: str,
     *,
     client: AuthenticatedClient | Client,
+
 ) -> HTTPValidationError | ThreadRead | None:
-    """Get Thread
+    """ Get Thread
 
     Args:
         thread_id (str):
@@ -147,11 +168,11 @@ async def asyncio(
 
     Returns:
         HTTPValidationError | ThreadRead
-    """
+     """
 
-    return (
-        await asyncio_detailed(
-            thread_id=thread_id,
-            client=client,
-        )
-    ).parsed
+
+    return (await asyncio_detailed(
+        thread_id=thread_id,
+client=client,
+
+    )).parsed
