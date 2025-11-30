@@ -1,9 +1,9 @@
 from __future__ import annotations
-
+import uuid
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Response
 
 from app.resources.address_router import address_router
 from app.resources.address_user_router import address_user_router
@@ -20,6 +20,7 @@ from app.utils.db_connection import create_db_and_tables, close_db_connection
 
 from fastapi.middleware.cors import CORSMiddleware
 from app.middleware.auth_middleware import AuthMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 
 # Table Models (Necessary)
 from app.models.po.address_user_po import AddressUser
@@ -28,6 +29,33 @@ from app.models.po.item_user_po import ItemUser
 from app.models.po.transaction_user_item_po import TransactionUserItem
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger("composite_api")
+
+class CorrelationIdMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        corr_id = request.headers.get("X-Correlation-ID", str(uuid.uuid4()))
+        request.state.correlation_id = corr_id
+
+        logger.info(
+            "Composite incoming %s %s (correlation_id=%s)",
+            request.method,
+            request.url.path,
+            corr_id,
+        )
+
+        response: Response = await call_next(request)
+
+        response.headers["X-Correlation-ID"] = corr_id
+
+        logger.info(
+            "Composite outgoing %s %s status=%s (correlation_id=%s)",
+            request.method,
+            request.url.path,
+            response.status_code,
+            corr_id,
+        )
+
+        return response
 
 # -----------------------------------------------------------------------------
 # Environments and Clients
@@ -62,6 +90,8 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+app.add_middleware(CorrelationIdMiddleware)
 
 app.add_middleware(
     AuthMiddleware,
