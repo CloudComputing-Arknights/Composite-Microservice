@@ -10,4 +10,3 @@ class ThreadUser(SQLModel, table=True):
     user_id: str = Field(index=True)
     created_at: datetime = Field(default_factory=datetime.now)
     updated_at: datetime = Field(default_factory=datetime.now)
-
