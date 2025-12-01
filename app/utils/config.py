@@ -21,6 +21,8 @@ def init_env():
     _user_client = UserClient(base_url=os.environ.get("USER_SERVICE_URL"))
     _item_client = ItemClient(base_url=os.environ.get("ITEM_SERVICE_URL"))
     _transaction_client = TransactionClient(base_url=os.environ.get("TRANSACTION_SERVICE_URL"))
+    _messaging_client = MessagingClient(base_url=os.environ.get("MESSAGING_SERVICE_URL"))
+
 
 
 def get_messaging_client() -> MessagingClient:
