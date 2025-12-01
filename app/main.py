@@ -14,8 +14,10 @@ from app.resources.root_router import root_router
 from app.resources.transaction_router import transaction_router
 from app.resources.transaction_user_item_router import transaction_user_item_router
 from app.resources.user_router import user_router
-from app.resources.message_router import message_router
+from app.resources.message_user_router import message_user_router
 from app.resources.message_thread_router import thread_router
+from app.resources.message_router import message_router
+
 
 from app.utils.config import init_env
 from app.utils.db_connection import create_db_and_tables, close_db_connection
@@ -92,4 +94,5 @@ app.include_router(transaction_router)
 app.include_router(transaction_user_item_router)
 app.include_router(user_router)
 app.include_router(message_router)
+app.include_router(message_user_router)
 app.include_router(thread_router)

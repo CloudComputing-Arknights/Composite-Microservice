@@ -83,18 +83,3 @@ async def get_users_for_thread(
         raise HTTPException(status_code=403, detail="Unauthorized access to thread")
 
     return {"thread_id": thread_id, "users": users}
-
-
-@thread_router.get("/user/{user_id}/threads")
-async def get_threads_for_user(
-    request: Request,
-    user_id: str,
-    session: SessionDep,
-):
-    current_user_id = request.state.user_id
-
-    if user_id != current_user_id:
-        raise HTTPException(status_code=403, detail="Cannot view other users' threads")
-
-    threads = await get_user_threads(session, user_id)
-    return {"user_id": user_id, "threads": threads}
