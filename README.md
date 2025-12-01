@@ -2,6 +2,8 @@
 
 Live Demo: https://composite-microservice-191058157831.us-west2.run.app
 
+API Gateway: https://composite-gateway-2frr3e2v.wl.gateway.dev
+
 ## Install Dependencies
 
 ```bash
