@@ -2,6 +2,8 @@
 
 Live Demo: https://composite-microservice-191058157831.us-west2.run.app
 
+API Gateway: https://composite-gateway-2frr3e2v.wl.gateway.dev
+
 ## Install Dependencies
 
 ```bash
@@ -20,9 +22,6 @@ pip install -r requirements.txt
 openapi-python-client generate --path ./openapi/openapi-item.json --output-path ./app/client/item
 openapi-python-client generate --path ./openapi/openapi-transaction.json --output-path ./app/client/transaction
 openapi-python-client generate --path ./openapi/openapi-user.json --output-path ./app/client/user
-```
-```bash
-openapi-python-client generate --path ./openapi/openapi-message.json --output-path ./app/client/message
 ```
 
 ## Google Cloud Artifact Registry

@@ -24,10 +24,7 @@ async def update_address(
     payload: AddressDTO,
     request: Request
 ):
-    # 1. Token validation is assumed to pass via frontend logic, 
-    # but actual ownership check should be done by the downstream service.
-    
-    # 2. Prepare body for downstream service
+
     downstream_body = AddressUpdate(
         street=payload.street,
         city=payload.city,
@@ -61,9 +58,7 @@ async def delete_address(
     address_id: UUID,
     request: Request
 ):
-    # 1. Token validation is assumed to pass via frontend logic.
-    
-    # 2. Call Downstream Service
+
     response = await delete_address_async(
         client=get_address_client(),
         address_id=address_id

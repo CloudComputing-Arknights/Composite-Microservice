@@ -1,4 +1,6 @@
 import json
+import os
+import httpx
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Depends
@@ -37,6 +39,7 @@ from app.models.dto.user_dto import (
     SignUpReq,
     UpdateProfileReq,
     PublicUserRes,
+    GoogleLoginReq,
 )
 
 from app.models.dto.address_dto import AddressDTO
@@ -44,6 +47,7 @@ from app.models.dto.address_dto import AddressDTO
 from app.services.address_user_repository import get_user_addresses
 from app.utils.config import get_user_client, get_address_client
 from app.utils.db_connection import get_session
+from dotenv import load_dotenv
 
 
 security = HTTPBearer(auto_error=False)
@@ -52,9 +56,15 @@ user_router = APIRouter(
     dependencies=[Depends(security)],
 )
 
+load_dotenv()
+
+USER_SERVICE_URL = os.getenv("USER_SERVICE_URL")
+if not USER_SERVICE_URL:
+    raise RuntimeError("USER_SERVICE_URL must be set for composite /auth/google")
 
 @user_router.post("/token", response_model=SignInRes)
-async def sign_in(payload: SignInReq):
+async def sign_in(payload: SignInReq, request: Request):
+
     body = BodyLoginAuthTokenPost(username=payload.username, password=payload.password)
 
     response = await user_login_detailed(client=get_user_client(), body=body)
@@ -75,13 +85,46 @@ async def sign_in(payload: SignInReq):
         detail=error_detail
     )
 
+@user_router.post("/auth/google", response_model=SignInRes)
+async def google_sign_in(payload: GoogleLoginReq, request: Request):
+    if not USER_SERVICE_URL:
+        raise HTTPException(status_code=500, detail="User service base URL not configured")
+
+    corr_id = request.headers.get("X-Correlation-ID")
+
+    headers = {"Content-Type": "application/json"}
+    if corr_id:
+        headers["X-Correlation-ID"] = corr_id
+
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.post(
+                f"{USER_SERVICE_URL}/auth/google",
+                json={"id_token": payload.id_token},
+                headers=headers,
+            )
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=502, detail=f"User service error: {e!s}")
+
+    if resp.status_code != 200:
+        raise HTTPException(status_code=resp.status_code, detail="Google login failed")
+
+    data = resp.json()
+    access_token = data.get("access_token")
+    token_type = data.get("token_type") or "bearer"
+
+    if not access_token:
+        raise HTTPException(status_code=500, detail="User service did not return an access token")
+
+    return SignInRes(access_token=access_token, token_type=token_type)
+
 @user_router.post("/users", status_code=201, response_model=SignedInUserRes)
-async def create_user(payload: SignUpReq):
+async def create_user(payload: SignUpReq, request: Request):
+
     user_create = UserCreate(
         username=payload.username,
         email=payload.email,
         password=payload.password,
-        # optional fields (phone, birth_date, avatar_url, addresses) left as defaults
     )
 
     result = await create_user_async(client=get_user_client(), body=user_create)
@@ -123,8 +166,8 @@ async def create_user(payload: SignUpReq):
     )
 
 @user_router.get("/users/{user_id}", response_model=PublicUserRes)
-async def get_user_by_id(user_id: UUID):
-    """Get public user information by user ID."""
+async def get_user_by_id(user_id: UUID, request: Request):
+
     result = await get_user_async(user_id=user_id, client=get_user_client())
 
     if result is None:
@@ -208,7 +251,6 @@ async def update_me(
 ):
     user_id = request.state.user_id
 
-    # 2. Prepare Data for Downstream Service
     user_update = UserUpdate(
         email=payload.email,
         phone=payload.phone,
@@ -216,7 +258,6 @@ async def update_me(
         birth_date=payload.birth_date
     )
 
-    # 3. Call Downstream Update Endpoint
     result = await update_user_async(
         client=get_user_client(),
         user_id=user_id,
@@ -228,11 +269,8 @@ async def update_me(
     if isinstance(result, HTTPValidationError):
          raise HTTPException(status_code=400, detail="Invalid data for update")
 
-    # 4. Return Updated User Data (using existing mapping logic)
     user: UserRead = result
-    
-    # NOTE: You would typically call auth_me logic here to refetch and include addresses,
-    # but for simplicity, we return the user with an empty address list.
+
     return SignedInUserRes(
         id=user.id if not isinstance(user.id, type(UNSET)) else None,
         username=user.username,
