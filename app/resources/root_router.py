@@ -4,7 +4,7 @@ root_router = APIRouter()
 
 
 @root_router.get("/")
-async def root():
+def root():
     return {"message": "Welcome to the Composite API. See /docs for details."}
 
 
