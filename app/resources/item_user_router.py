@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Request, Depends, Header, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from uuid import UUID
+import base64
+import json
 import logging
 import asyncio
-
-from fastapi.security import HTTPBearer
 
 from app.client.item.item_api_client.client import Client
 from app.client.item.item_api_client.models import HTTPValidationError
@@ -18,6 +19,7 @@ from app.client.item.item_api_client.api.items import (
 from app.models.dto.item_user_dto import CreateOwnItemReq, UpdateOwnItemReq
 from app.models.dto.item_dto import ItemCreate, ItemRead, ItemUpdate
 from app.models.dto.job_dto import JobRead, JobStatus
+from app.models.dto.pubsub_dto import PubSubEnvelope, PubSubMessage
 from app.services.item_user_repository import (
     create_item_user_relation,
     verify_item_ownership
@@ -27,6 +29,7 @@ from app.services.item_user_repository import (
     delete_item_user_relation
 )
 from app.services.item_service import complete_item
+from app.utils.auth import get_user_id_from_token
 from app.utils.db_connection import SessionDep
 from app.utils.config import get_item_client
 from app.utils.config import get_address_client
@@ -54,6 +57,8 @@ async def create_item_for_me(
 
     # downstream_req = ItemCreate(**payload.model_dump(exclude={"address_UUID"}))
     downstream_req = ItemCreate(**payload.model_dump())
+
+    client = client.with_headers({"X-User-Id": str(user_uuid)})
 
     # Handle the job returned by the request
     job_response = await create_item_items_post.asyncio(
@@ -115,23 +120,23 @@ async def get_my_job_status(
         raise HTTPException(status_code=500, detail="Downstream integration error")
 
     # Store item-user relation if it's COMPLETED.
-    if downstream_response.status == JobStatus.COMPLETED and downstream_response.item_uuid:
-        item_id_str = str(downstream_response.item_uuid)
-        user_id_str = str(user_id)
-        # address_id_str = str(address_id)
-
-        # [Idempotence Check] Check whether the relationship already exists
-        is_owned = await verify_item_ownership(
-            session=session,
-            item_id=item_id_str,
-            user_id=user_id_str
-        )
-        if not is_owned:
-            await create_item_user_relation(
-                session=session,
-                item_id=item_id_str,
-                user_id=user_id_str
-            )
+    # if downstream_response.status == JobStatus.COMPLETED and downstream_response.item_uuid:
+    #     item_id_str = str(downstream_response.item_uuid)
+    #     user_id_str = str(user_uuid)
+    #     # address_id_str = str(address_id)
+    #
+    #     # [Idempotence Check] Check whether the relationship already exists
+    #     is_owned = await verify_item_ownership(
+    #         session=session,
+    #         item_id=item_id_str,
+    #         user_id=user_id_str
+    #     )
+    #     if not is_owned:
+    #         await create_item_user_relation(
+    #             session=session,
+    #             item_id=item_id_str,
+    #             user_id=user_id_str
+    #         )
 
         # address info has been stored in item MS downstream
         # Store item-address relation
@@ -270,3 +275,55 @@ async def delete_my_item(
     await delete_item_user_relation(session, item_id)
 
     return
+
+
+# ====================================== PubSub ======================================
+@item_user_router.post("/webhooks/pubsub/item-created", status_code=200)
+async def handle_item_created_event(
+        envelope: PubSubEnvelope,
+        session: SessionDep
+):
+    """
+    Push Endpoint triggered by Google Cloud Pub/Sub.
+    Get information of successfully created item and store relationship.
+    """
+    try:
+        # Decode Pub/Sub message (Base64 -> JSON String -> Dict)
+        decoded_data = base64.b64decode(envelope.message.data).decode("utf-8")
+        event_data = json.loads(decoded_data)
+
+        log.info(f"Received Pub/Sub event: {event_data}")
+
+        if event_data.get("status") != "COMPLETED":
+            return {"status": "ignored", "reason": "Not completed"}
+
+        item_id_str = event_data.get("item_id")
+        user_id_str = event_data.get("user_id")
+
+        if not item_id_str or not user_id_str:
+            log.error("Invalid event data: missing item_id or user_id")
+            # 200 indicating receiving message, avoiding loop of Pub/Sub
+            return {"status": "error", "reason": "Missing data"}
+
+        # Idempotence Check
+        is_owned = await verify_item_ownership(
+            session=session,
+            item_id=item_id_str,
+            user_id=user_id_str
+        )
+
+        if not is_owned:
+            await create_item_user_relation(
+                session=session,
+                item_id=item_id_str,
+                user_id=user_id_str
+            )
+            log.info(f"Relation created via Pub/Sub: User {user_id_str} - Item {item_id_str}")
+        else:
+            log.info(f"Relation already exists (Idempotent skip): {item_id_str}")
+
+        return {"status": "processed"}
+
+    except Exception as e:
+        log.error(f"Error processing Pub/Sub message: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal Error")
