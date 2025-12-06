@@ -58,7 +58,7 @@ async def create_item_for_me(
     # downstream_req = ItemCreate(**payload.model_dump(exclude={"address_UUID"}))
     downstream_req = ItemCreate(**payload.model_dump())
 
-    client = client.with_headers({"X-User-Id": str(user_uuid)})
+    client = client.with_headers({"X-User-Id": user_id})
 
     # Handle the job returned by the request
     job_response = await create_item_items_post.asyncio(
