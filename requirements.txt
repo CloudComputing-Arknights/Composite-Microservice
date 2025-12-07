@@ -19,6 +19,7 @@ protobuf
 httpx
 attrs
 python-dateutil
+python-multipart
 
 # Database
 asyncmy
