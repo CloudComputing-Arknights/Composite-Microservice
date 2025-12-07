@@ -24,4 +24,7 @@ python-dateutil
 asyncmy
 sqlmodel # sqlmodel
 SQLAlchemy # sqlalchemy
-google-cloud-storage # google-cloud-storage
+
+# Google
+google-auth # google.oauth2
+google-cloud-storage # google.cloud
