@@ -17,7 +17,7 @@ from app.resources.user_router import user_router
 from app.resources.message_user_router import message_user_router
 from app.resources.message_thread_router import thread_router
 from app.resources.message_router import message_router
-
+from app.resources.image_router import image_router
 
 from app.utils.config import init_env
 from app.utils.db_connection import create_db_and_tables, close_db_connection
@@ -126,3 +126,4 @@ app.include_router(user_router)
 app.include_router(message_router)
 app.include_router(message_user_router)
 app.include_router(thread_router)
+app.include_router(image_router)
