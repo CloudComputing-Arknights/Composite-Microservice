@@ -25,3 +25,6 @@ asyncmy
 sqlmodel # sqlmodel
 SQLAlchemy # sqlalchemy
 google-cloud-storage # google-cloud-storage
+
+# Image processing
+Pillow # Pillow
