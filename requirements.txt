@@ -29,3 +29,7 @@ SQLAlchemy # sqlalchemy
 # Google
 google-auth # google.oauth2
 google-cloud-storage # google.cloud
+
+
+# Image processing
+Pillow # Pillow

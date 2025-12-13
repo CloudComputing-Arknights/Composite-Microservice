@@ -85,3 +85,8 @@ openapi-python-client generate --path ./openapi/openapi-user.json --output-path 
     ```
 2. Clean Local Docker images
 3. Clean Artifact Registry
+
+## Run Locally
+```
+python -m uvicorn app:main --reload --host 0.0.0.0 --port 8000
+```
