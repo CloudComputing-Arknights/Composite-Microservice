@@ -168,10 +168,10 @@ async def get_image_url(filename: str):
         if not blob.exists():
             raise HTTPException(status_code=404, detail="image not found")
             
-        # generate signed url, valid for 15 minutes, for security and performance
+        # generate signed url with very long expiration (effectively no time limit)
         signed_url = blob.generate_signed_url(
             version="v4",
-            expiration=timedelta(minutes=15),
+            expiration=timedelta(days=3650),  # 10 years - effectively no expiration
             method="GET"
         )
         

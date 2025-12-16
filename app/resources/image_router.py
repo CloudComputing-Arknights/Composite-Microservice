@@ -21,7 +21,8 @@ async def upload_image_endpoint(file: UploadFile = File(...), fcm_token: Annotat
         payload = {
         "fcm_token": fcm_token,
         "title":"New Image Compressed",
-        "body":"You have a new image compressed successfully, please check your app"
+        "body":"You have a new image compressed successfully, please check your app",
+        "result":"success"
     }
         response = requests.post(cloud_function_url, json=payload)
         if response.status_code == 200:
