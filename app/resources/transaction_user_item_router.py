@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Header, status, Depends, Request
 from typing import Optional, Literal
 import asyncio
 import logging
+from concurrent.futures import ThreadPoolExecutor
 
 from fastapi.security import HTTPBearer
 
@@ -47,6 +48,9 @@ transaction_user_item_router = APIRouter(
     tags=["Transaction User Item"],
     dependencies=[Depends(security)],
 )
+
+# Thread pool executor for parallel execution
+_thread_pool = ThreadPoolExecutor(max_workers=10, thread_name_prefix="transaction_worker")
 
 
 @transaction_user_item_router.post("/transactions/transaction", response_model=TransactionRes, status_code=status.HTTP_201_CREATED)
@@ -126,13 +130,27 @@ async def get_transaction(
     log.info(f"User {user_id} fetching transaction {transaction_id}")
     
     try:
-        # Parallel execution: fetch from microservice and local DB simultaneously
+        # Parallel execution using threads: fetch from microservice in thread, DB query stays async
+        loop = asyncio.get_event_loop()
+        
+        # Define function to run in thread (only for synchronous API call)
+        def fetch_transaction_from_service():
+            """Fetch transaction from Transaction Service (synchronous call in thread)"""
+            try:
+                return get_transaction_transactions_transaction_id_get.sync(
+                    client=get_transaction_client(),
+                    transaction_id=transaction_id
+                )
+            except Exception as e:
+                log.error(f"Error in thread fetching transaction from service: {str(e)}")
+                raise
+        
+        # Execute operations in parallel:
+        # 1. API call runs in thread pool (synchronous blocking call)
+        # 2. Database query runs asynchronously in main event loop
         transaction_result, relation = await asyncio.gather(
-            get_transaction_transactions_transaction_id_get.asyncio(
-                client=get_transaction_client(),
-                transaction_id=transaction_id
-            ),
-            get_transaction_relation(session, transaction_id)
+            loop.run_in_executor(_thread_pool, fetch_transaction_from_service),
+            get_transaction_relation(session, transaction_id)  # Keep async, runs in main loop
         )
         
         if not transaction_result:
@@ -189,16 +207,30 @@ async def list_transactions(
         if type:
             type_client = ListTransactionsTransactionsGetTypeType0(type)
         
-        # Parallel execution: fetch user relations and downstream transactions simultaneously
+        # Parallel execution using threads: fetch user relations (async) and downstream transactions (thread)
+        loop = asyncio.get_event_loop()
+        
+        # Define function to run in thread (only for synchronous API call)
+        def fetch_transactions_from_service():
+            """Fetch transactions from Transaction Service (synchronous call in thread)"""
+            try:
+                return list_transactions_transactions_get.sync(
+                    client=get_transaction_client(),
+                    status_param=status_param_client,
+                    type_=type_client,
+                    limit=limit,
+                    offset=offset
+                )
+            except Exception as e:
+                log.error(f"Error in thread fetching transactions from service: {str(e)}")
+                raise
+        
+        # Execute operations in parallel:
+        # 1. API call runs in thread pool (synchronous blocking call)
+        # 2. Database query runs asynchronously in main event loop
         relations, transactions_result = await asyncio.gather(
-            get_user_transactions(session, user_id),
-            list_transactions_transactions_get.asyncio(
-                client=get_transaction_client(),
-                status_param=status_param_client,
-                type_=type_client,
-                limit=limit,
-                offset=offset
-            )
+            get_user_transactions(session, user_id),  # Keep async, runs in main loop
+            loop.run_in_executor(_thread_pool, fetch_transactions_from_service)
         )
         
         if requested_item_id:
@@ -319,14 +351,28 @@ async def delete_transaction(
     log.info(f"User {user_id} attempting to delete transaction {transaction_id}")
     
     try:
-        # Parallel execution: fetch transaction, relation, and verify permission simultaneously
+        # Parallel execution using threads: fetch transaction (thread), relation (async), and verify permission (async)
+        loop = asyncio.get_event_loop()
+        
+        # Define function to run in thread (only for synchronous API call)
+        def fetch_transaction_from_service():
+            """Fetch transaction from Transaction Service (synchronous call in thread)"""
+            try:
+                return get_transaction_transactions_transaction_id_get.sync(
+                    client=get_transaction_client(),
+                    transaction_id=transaction_id
+                )
+            except Exception as e:
+                log.error(f"Error in thread fetching transaction from service: {str(e)}")
+                raise
+        
+        # Execute operations in parallel:
+        # 1. API call runs in thread pool (synchronous blocking call)
+        # 2. Database queries run asynchronously in main event loop
         transaction_result, relation, is_initiator = await asyncio.gather(
-            get_transaction_transactions_transaction_id_get.asyncio(
-                client=get_transaction_client(),
-                transaction_id=transaction_id
-            ),
-            get_transaction_relation(session, transaction_id),
-            verify_transaction_initiator(session, transaction_id, user_id)
+            loop.run_in_executor(_thread_pool, fetch_transaction_from_service),
+            get_transaction_relation(session, transaction_id),  # Keep async, runs in main loop
+            verify_transaction_initiator(session, transaction_id, user_id)  # Keep async, runs in main loop
         )
         
         if not transaction_result:
